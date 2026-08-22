@@ -1,0 +1,445 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+  <meta charset="UTF-8" />
+  <title>iframe-channel MVP 演示</title>
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: system-ui, -apple-system, sans-serif;
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+      background: #0f172a;
+      color: white;
+      padding: 12px;
+      gap: 12px;
+    }
+
+    header {
+      padding: 12px 20px;
+      background: #1e293b;
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+
+    header h1 {
+      font-size: 15px;
+      font-weight: 600;
+    }
+
+    .mode-tabs {
+      display: flex;
+      gap: 2px;
+      padding: 3px;
+      background: #334155;
+      border-radius: 8px;
+    }
+
+    .mode-tab {
+      padding: 6px 20px;
+      border: none;
+      background: transparent;
+      color: #94a3b8;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 12px;
+      font-weight: 500;
+      transition: all 0.2s;
+    }
+
+    .mode-tab:hover {
+      color: white;
+    }
+
+    .mode-tab.active {
+      background: #3b82f6;
+      color: white;
+    }
+
+    .mode-tab.active.native {
+      background: #f59e0b;
+    }
+
+    .uid-tabs {
+      display: flex;
+      gap: 2px;
+      padding: 3px;
+      background: #334155;
+      border-radius: 8px;
+      margin-left: 12px;
+    }
+
+    .uid-tab {
+      padding: 6px 14px;
+      border: none;
+      background: transparent;
+      color: #94a3b8;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 12px;
+      transition: all 0.2s;
+    }
+
+    .uid-tab:hover {
+      color: white;
+    }
+
+    .uid-tab.active {
+      background: #6366f1;
+      color: white;
+    }
+
+    .status-area {
+      margin-left: auto;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .status-item {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 10px;
+      background: #334155;
+      border-radius: 6px;
+      font-size: 11px;
+    }
+
+    .status-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: #ef4444;
+      transition: background 0.3s;
+    }
+
+    .status-dot.connected {
+      background: #22c55e;
+    }
+
+    .controls-row {
+      padding: 10px 20px;
+      background: #1e293b;
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      font-size: 12px;
+    }
+
+    .controls-row label {
+      color: #94a3b8;
+    }
+
+    .toast-container {
+      position: fixed;
+      top: 100px;
+      right: 20px;
+      z-index: 1000;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .toast {
+      padding: 12px 16px;
+      background: #1e293b;
+      border: 1px solid #334155;
+      border-radius: 8px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+      animation: slideIn 0.3s ease;
+      max-width: 280px;
+    }
+
+    .toast.sdk {
+      border-left: 3px solid #3b82f6;
+    }
+
+    .toast.native {
+      border-left: 3px solid #f59e0b;
+    }
+
+    .toast-title {
+      font-size: 11px;
+      color: #94a3b8;
+      margin-bottom: 2px;
+    }
+
+    .toast-content {
+      font-size: 13px;
+    }
+
+    @keyframes slideIn {
+      from {
+        transform: translateX(100px);
+        opacity: 0;
+      }
+
+      to {
+        transform: translateX(0);
+        opacity: 1;
+      }
+    }
+
+    main {
+      flex: 1;
+      position: relative;
+      overflow: hidden;
+      border-radius: 12px;
+    }
+
+    .iframe-wrapper {
+      position: absolute;
+      inset: 0;
+      display: none;
+    }
+
+    .iframe-wrapper.active {
+      display: block;
+    }
+
+    .iframe-wrapper iframe {
+      width: 100%;
+      height: 100%;
+      border: none;
+      border-radius: 12px;
+    }
+  </style>
+</head>
+
+<body>
+  <header>
+    <h1>iframe-channel</h1>
+
+    <div class="mode-tabs">
+      <button
+        class="mode-tab active"
+        data-mode="sdk"
+      >SDK 模式</button>
+      <button
+        class="mode-tab"
+        data-mode="native"
+      >原生模式</button>
+    </div>
+
+    <div class="uid-tabs">
+      <button
+        class="uid-tab active"
+        data-uid="1001"
+      >用户 1001</button>
+      <button
+        class="uid-tab"
+        data-uid="1002"
+      >用户 1002</button>
+      <button
+        class="uid-tab"
+        data-uid="1003"
+      >用户 1003</button>
+    </div>
+
+    <div class="status-area">
+      <div
+        class="status-item"
+        id="sdk-status"
+      >
+        <div
+          class="status-dot"
+          id="sdk-dot"
+        ></div>
+        <span>SDK</span>
+      </div>
+      <div
+        class="status-item"
+        id="native-status"
+      >
+        <div
+          class="status-dot"
+          id="native-dot"
+        ></div>
+        <span>原生</span>
+      </div>
+    </div>
+  </header>
+
+  <div class="controls-row">
+    <label>设置子应用背景色:</label>
+    <input
+      type="color"
+      id="color-picker"
+      value="#3b82f6"
+      style="
+          width: 40px;
+          height: 28px;
+          border: none;
+          border-radius: 4px;
+          cursor: pointer;
+        "
+    />
+  </div>
+
+  <div
+    id="toast-container"
+    class="toast-container"
+  ></div>
+
+  <main>
+    <div
+      class="iframe-wrapper active"
+      data-mode="sdk"
+    >
+      <iframe
+        id="sdk-iframe"
+        src="/examples/child-sdk.html"
+      ></iframe>
+    </div>
+    <div
+      class="iframe-wrapper"
+      data-mode="native"
+    >
+      <iframe
+        id="native-iframe"
+        src="/examples/child-native.html"
+      ></iframe>
+    </div>
+  </main>
+
+  <script type="module">
+    import { connectToIframe } from "/dist/index.js";
+
+    const ORIGIN = window.location.origin;
+    let currentMode = "sdk";
+    let currentUid = "1001";
+
+    // 颜色选择器
+    document.getElementById("color-picker").addEventListener("input", (e) => {
+      const hex = e.target.value;
+      if (sdkRemote) sdkRemote.setBackground(hex);
+      document
+        .getElementById("native-iframe")
+        .contentWindow.postMessage(
+          { action: "setBackground", data: hex },
+          "*"
+        );
+    });
+
+    // Toast
+    function showToast(title, content, type = "sdk") {
+      const container = document.getElementById("toast-container");
+      const toast = document.createElement("div");
+      toast.className = `toast ${type}`;
+      toast.innerHTML = `<div class="toast-title">${title}</div><div class="toast-content">${content}</div>`;
+      container.appendChild(toast);
+      setTimeout(() => toast.remove(), 3000);
+    }
+
+    // 模式切换
+    document.querySelectorAll(".mode-tab").forEach((tab) => {
+      tab.onclick = () => {
+        document
+          .querySelectorAll(".mode-tab")
+          .forEach((t) => t.classList.remove("active"));
+        tab.classList.add("active");
+        if (tab.dataset.mode === "native") tab.classList.add("native");
+        currentMode = tab.dataset.mode;
+
+        document.querySelectorAll(".iframe-wrapper").forEach((w) => {
+          w.classList.toggle("active", w.dataset.mode === currentMode);
+        });
+      };
+    });
+
+    // UID 切换
+    document.querySelectorAll(".uid-tab").forEach((tab) => {
+      tab.onclick = () => {
+        document
+          .querySelectorAll(".uid-tab")
+          .forEach((t) => t.classList.remove("active"));
+        tab.classList.add("active");
+        currentUid = tab.dataset.uid;
+
+        // 通知子应用
+        if (sdkRemote) sdkRemote.setUid(currentUid);
+        document
+          .getElementById("native-iframe")
+          .contentWindow.postMessage(
+            { action: "setUid", data: currentUid },
+            "*"
+          );
+      };
+    });
+
+    // ========== SDK 子应用 ==========
+    let sdkRemote = null;
+    const sdkChannel = connectToIframe({
+      iframe: "#sdk-iframe",
+      origin: ORIGIN,
+      debug: true,
+      methods: {
+        showMessage: ({ from, message }) => {
+          showToast(`来自 ${from}`, message, "sdk");
+          return { success: true };
+        },
+        updateStatus: ({ status, emoji }) => {
+          showToast("状态更新", `${emoji} ${status}`, "sdk");
+          return { success: true };
+        },
+        setBackground: (color) => {
+          document.body.style.background = color;
+          return { success: true };
+        },
+      },
+    });
+
+    sdkChannel.promise.then((r) => {
+      sdkRemote = r;
+      document.getElementById("sdk-dot").classList.add("connected");
+      r.setUid(currentUid);
+    });
+
+    // ========== 原生子应用（使用纯 postMessage）==========
+    const nativeIframe = document.getElementById("native-iframe");
+
+    // 监听原生子应用的消息
+    window.addEventListener("message", (event) => {
+      if (event.source !== nativeIframe.contentWindow) return;
+      const msg = event.data;
+      if (!msg || typeof msg !== "object") return;
+
+      if (msg.action === "showMessage") {
+        showToast(`来自 ${msg.data.from}`, msg.data.message, "native");
+      }
+      if (msg.action === "updateStatus") {
+        showToast(
+          "状态更新",
+          `${msg.data.emoji} ${msg.data.status}`,
+          "native"
+        );
+      }
+      if (msg.action === "setBackground") {
+        document.body.style.background = msg.data;
+      }
+    });
+
+    nativeIframe.onload = () => {
+      document.getElementById("native-dot").classList.add("connected");
+      nativeIframe.contentWindow.postMessage(
+        { action: "setUid", data: currentUid },
+        "*"
+      );
+    };
+
+    window.testAPI = { showToast };
+  </script>
+</body>
+
+</html>

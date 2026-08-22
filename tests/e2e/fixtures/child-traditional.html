@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Child App (Traditional - No SDK)</title>
+  <style>
+    body { font-family: system-ui, sans-serif; padding: 10px; background: #fff8f0; }
+    button { margin: 3px; padding: 5px 10px; cursor: pointer; font-size: 12px; }
+    .log { background: white; padding: 8px; margin-top: 8px; font-family: monospace; font-size: 11px; max-height: 80px; overflow-y: auto; border: 1px solid #ddd; }
+    .log-item { margin: 2px 0; }
+    .success { color: green; }
+    .error { color: red; }
+    h4 { margin: 0 0 10px 0; }
+  </style>
+</head>
+<body>
+  <!--
+  ═══════════════════════════════════════════════════════════════════════════════
+  E2E 测试 Fixture：传统模式子页面（不使用 SDK）
+  ═══════════════════════════════════════════════════════════════════════════════
+
+  这是什么？
+  ──────────
+  这个页面模拟「无法修改代码的第三方页面」场景。
+  它不使用 SDK，而是直接通过 postMessage 与父页面通信。
+
+  为什么需要这种模式？
+  ────────────────────────
+  实际项目中，有时候 iframe 加载的是第三方页面，无法让它引入 SDK。
+  这时候父页面的 SDK 可以处理这种「简单消息格式」的请求。
+
+  消息格式
+  ──────────
+  子页面发送请求：
+  {
+    action: 'getData',           // 要调用的方法名
+    data: { id: 'item-456' },    // 参数
+    requestId: 'req-1'           // 请求 ID，用于匹配响应
+  }
+
+  父页面 SDK 返回响应：
+  {
+    type: '__NATIVE_RESPONSE__', // 响应标识
+    requestId: 'req-1',          // 对应的请求 ID
+    success: true,               // 是否成功
+    result: { ... }              // 返回数据
+  }
+
+  与 SDK 模式的区别
+  ─────────────────────────
+  | 功能           | SDK 模式 | 传统模式 |
+  |----------------|----------|----------|
+  | 父调用子方法   | ✅       | ❌       |
+  | 子调用父方法   | ✅       | ✅       |
+  | 双向事件       | ✅       | ❌       |
+  | 自动握手       | ✅       | ❌       |
+  | 类型安全       | ✅       | ❌       |
+
+  ═══════════════════════════════════════════════════════════════════════════════
+  -->
+
+  <h4>Child (Traditional - No SDK)</h4>
+
+  <div>
+    <!-- 测试按钮：调用父页面的 getData 方法 -->
+    <button id="call-getData-btn">Call getData()</button>
+    <!-- 测试按钮：调用父页面的 sendNotification 方法 -->
+    <button id="call-sendNotification-btn">Call sendNotification()</button>
+  </div>
+
+  <!-- 日志区域 -->
+  <div id="log" class="log"></div>
+
+  <script>
+    // ═══════════════════════════════════════════════════════════════════════════
+    // 注意：这个页面不使用 SDK！
+    // ═══════════════════════════════════════════════════════════════════════════
+    //
+    // 这里演示如何用原生 postMessage 与父页面的 SDK 通信
+    // 消息格式：{ action, data, requestId }
+    //
+
+    const log = document.getElementById('log')
+
+    // 存储等待响应的请求
+    // key: requestId, value: { resolve, reject }
+    const pendingRequests = new Map()
+
+    // 请求计数器，用于生成唯一的 requestId
+    let requestCounter = 0
+
+    /**
+     * 日志函数
+     */
+    function addLog(message, type = '') {
+      const item = document.createElement('div')
+      item.className = `log-item ${type}`
+      item.textContent = message
+      log.appendChild(item)
+      log.scrollTop = log.scrollHeight
+    }
+
+    // ═══════════════════════════════════════════════════════════════════════════
+    // 发送请求到父页面
+    // ═══════════════════════════════════════════════════════════════════════════
+
+    /**
+     * 调用父页面方法
+     *
+     * @param {string} action - 要调用的方法名（对应父页面 methods 中的方法）
+     * @param {any} data - 传递给方法的参数
+     * @returns {Promise<any>} 方法返回值
+     *
+     * 使用示例：
+     *   const result = await callParent('getData', { id: 'item-456' })
+     */
+    function callParent(action, data) {
+      return new Promise((resolve, reject) => {
+        // 生成唯一的请求 ID
+        const requestId = `req-${++requestCounter}`
+
+        // 保存 resolve/reject，等收到响应时调用
+        pendingRequests.set(requestId, { resolve, reject })
+
+        // 构造请求消息
+        // 这个格式是 SDK 能识别的「简单消息格式」
+        const message = { action, data, requestId }
+
+        addLog(`Sending: ${JSON.stringify(message)}`)
+
+        // 发送到父页面
+        // window.parent 是父页面的 window 对象
+        // '*' 表示不限制 origin（生产环境应该指定具体的 origin）
+        window.parent.postMessage(message, '*')
+
+        // 设置超时，避免永远等待
+        setTimeout(() => {
+          if (pendingRequests.has(requestId)) {
+            pendingRequests.delete(requestId)
+            reject(new Error('Request timeout'))
+          }
+        }, 5000)
+      })
+    }
+
+    // ═══════════════════════════════════════════════════════════════════════════
+    // 监听父页面响应
+    // ═══════════════════════════════════════════════════════════════════════════
+
+    /**
+     * 监听 message 事件
+     *
+     * 父页面的 SDK 会发送这样的响应：
+     * {
+     *   type: '__NATIVE_RESPONSE__',
+     *   requestId: 'req-1',
+     *   success: true,
+     *   result: { ... }  // 或 error: '...'
+     * }
+     */
+    window.addEventListener('message', (event) => {
+      const message = event.data
+
+      // 检查是否是 SDK 的响应消息
+      // type === '__NATIVE_RESPONSE__' 是 SDK 的内部协议
+      if (message && message.type === '__NATIVE_RESPONSE__') {
+        const { requestId, success, result, error } = message
+
+        // 查找对应的等待中的请求
+        const pending = pendingRequests.get(requestId)
+
+        if (pending) {
+          // 移除已处理的请求
+          pendingRequests.delete(requestId)
+
+          if (success) {
+            // 调用成功，返回结果
+            addLog(`Response: ${JSON.stringify(result)}`, 'success')
+            pending.resolve(result)
+          } else {
+            // 调用失败，返回错误
+            addLog(`Error: ${error}`, 'error')
+            pending.reject(new Error(error))
+          }
+        }
+      }
+    })
+
+    // ═══════════════════════════════════════════════════════════════════════════
+    // 绑定按钮事件
+    // ═══════════════════════════════════════════════════════════════════════════
+
+    // 调用父页面的 getData 方法
+    document.getElementById('call-getData-btn').onclick = async () => {
+      try {
+        // 调用父页面定义的 getData 方法，传递参数 { id: 'item-456' }
+        const result = await callParent('getData', { id: 'item-456' })
+        addLog(`getData result: ${JSON.stringify(result)}`, 'success')
+      } catch (err) {
+        addLog(`getData error: ${err.message}`, 'error')
+      }
+    }
+
+    // 调用父页面的 sendNotification 方法
+    document.getElementById('call-sendNotification-btn').onclick = async () => {
+      try {
+        const result = await callParent('sendNotification', { message: 'Hello from traditional child!' })
+        addLog(`sendNotification result: ${JSON.stringify(result)}`, 'success')
+      } catch (err) {
+        addLog(`sendNotification error: ${err.message}`, 'error')
+      }
+    }
+
+    // 页面加载完成后显示就绪消息
+    // 测试会等待看到这个消息后再开始操作
+    addLog('Traditional child ready (no SDK)')
+
+    // ═══════════════════════════════════════════════════════════════════════════
+    // 暴露测试 API
+    // ═══════════════════════════════════════════════════════════════════════════
+    window.testAPI = {
+      callParent,
+      addLog,
+      getPendingRequests: () => pendingRequests
+    }
+  </script>
+</body>
+</html>

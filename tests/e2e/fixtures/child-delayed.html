@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Child App (Delayed SDK)</title>
+  <style>
+    body { font-family: system-ui, sans-serif; padding: 10px; background: #fff3e0; }
+    .log { background: white; padding: 8px; margin-top: 8px; font-family: monospace; font-size: 11px; max-height: 80px; overflow-y: auto; }
+    .log-item { margin: 2px 0; }
+    .success { color: green; }
+    .info { color: #666; }
+    h4 { margin: 0 0 10px 0; }
+  </style>
+</head>
+<body>
+  <!--
+  ═══════════════════════════════════════════════════════════════════════════════
+  E2E 测试 Fixture：延迟初始化的子页面
+  ═══════════════════════════════════════════════════════════════════════════════
+
+  测试目的：验证重试机制
+  ────────────────────────
+  这个页面会延迟 2 秒才调用 connectToParent()。
+  此时父应用已经开始监听，子应用的 READY 消息应该能被正确接收。
+
+  场景：
+  ────────
+  0s: 父应用 connectToIframe() 开始监听
+  0s: 子应用页面加载，但还没初始化 SDK
+  2s: 子应用 connectToParent() 发送 READY
+  2s: 父应用收到 READY，回复 ACK
+  2s: 握手完成
+
+  ═══════════════════════════════════════════════════════════════════════════════
+  -->
+
+  <h4>Child (Delayed 2s)</h4>
+  <div id="log" class="log"></div>
+
+  <script type="module">
+    import { connectToParent } from '../../../dist/index.js'
+
+    const log = document.getElementById('log')
+
+    function addLog(message, type = '') {
+      const item = document.createElement('div')
+      item.className = `log-item ${type}`
+      item.textContent = `[${new Date().toLocaleTimeString()}] ${message}`
+      log.appendChild(item)
+      log.scrollTop = log.scrollHeight
+    }
+
+    addLog('Page loaded, waiting 2s before connecting...', 'info')
+
+    // 延迟 2 秒后才初始化 SDK
+    setTimeout(() => {
+      addLog('Starting connectToParent()...', 'info')
+
+      const channel = connectToParent({
+        allowedOrigins: ['*'],
+        methods: {
+          delayedMethod: async (params) => {
+            addLog(`delayedMethod called: ${JSON.stringify(params)}`)
+            return { delayed: true, echo: params }
+          }
+        },
+        debug: true
+      })
+
+      channel.promise.then((remote) => {
+        addLog('Connected to parent!', 'success')
+        window.remote = remote
+        window.channel = channel
+      })
+
+      window.testAPI = {
+        getChannel: () => channel,
+        addLog
+      }
+    }, 2000)
+  </script>
+</body>
+</html>

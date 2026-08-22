@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Child App (SDK)</title>
+  <style>
+    body { font-family: system-ui, sans-serif; padding: 10px; background: #f0f8ff; }
+    button { margin: 3px; padding: 5px 10px; cursor: pointer; font-size: 12px; }
+    .log { background: white; padding: 8px; margin-top: 8px; font-family: monospace; font-size: 11px; max-height: 80px; overflow-y: auto; }
+    .log-item { margin: 2px 0; }
+    .success { color: green; }
+    .error { color: red; }
+    .event { color: blue; }
+    h4 { margin: 0 0 10px 0; }
+  </style>
+</head>
+<body>
+  <!--
+  ═══════════════════════════════════════════════════════════════════════════════
+  E2E 测试 Fixture：SDK 模式子页面
+  ═══════════════════════════════════════════════════════════════════════════════
+
+  这是什么？
+  ──────────
+  这个页面会被嵌入到 parent.html 的 iframe 中。
+  它使用 SDK 的 connectToParent() 方法与父页面建立双向通信。
+
+  通信方式
+  ──────────
+                    Parent (parent.html)
+                    connectToIframe()
+                           │
+                    ┌──────┴──────┐
+                    │   iframe    │
+                    └──────┬──────┘
+                           │
+                    Child (this page)
+                    connectToParent()
+
+  SDK 模式 vs 传统模式
+  ─────────────────────────
+  - SDK 模式：父子都用 SDK，支持双向 RPC + 事件
+  - 传统模式：只有父用 SDK，子用原生 postMessage，只支持单向调用
+
+  测试如何使用这个页面？
+  ────────────────────────
+  测试通过 frameLocator 操作 iframe 内的元素：
+
+    const childFrame = page.frameLocator('#sdk-iframe')
+    await childFrame.locator('#call-parent-btn').click()
+    await expect(childFrame.locator('#log')).toContainText('Result:')
+
+  ═══════════════════════════════════════════════════════════════════════════════
+  -->
+
+  <h4>Child (SDK Mode)</h4>
+
+  <div>
+    <!-- 测试按钮：调用父页面方法 -->
+    <button id="call-parent-btn">Call parentMethod()</button>
+    <!-- 测试按钮：向父页面发送事件 -->
+    <button id="emit-event-btn">Emit CHILD_EVENT</button>
+  </div>
+
+  <!-- 日志区域：测试会检查这里的内容 -->
+  <div id="log" class="log"></div>
+
+  <script type="module">
+    // ═══════════════════════════════════════════════════════════════════════════
+    // 引入 SDK
+    // ═══════════════════════════════════════════════════════════════════════════
+    //
+    // 子页面使用 connectToParent() 连接父页面
+    // 注意：同样引用打包后的 dist/index.js
+    //
+    import { connectToParent } from '../../../dist/index.js'
+
+    const log = document.getElementById('log')
+
+    /**
+     * 日志函数
+     */
+    function addLog(message, type = '') {
+      const item = document.createElement('div')
+      item.className = `log-item ${type}`
+      item.textContent = message
+      log.appendChild(item)
+      log.scrollTop = log.scrollHeight
+    }
+
+    // ═══════════════════════════════════════════════════════════════════════════
+    // 创建 SDK 通道（子页面端）
+    // ═══════════════════════════════════════════════════════════════════════════
+    //
+    // connectToParent() 会自动向父页面发起握手请求
+    // 参数说明：
+    // - allowedOrigins: 允许的父页面 origin 列表（'*' 表示允许所有，仅测试用）
+    // - methods: 暴露给父页面调用的方法
+    // - debug: 开启调试日志
+    //
+    const channel = connectToParent({
+      allowedOrigins: ['*'], // 生产环境应该指定具体的 origin！
+      methods: {
+        /**
+         * 暴露给父页面调用的方法
+         *
+         * 父页面可以这样调用：
+         *   const result = await remote.childMethod({ from: 'parent' })
+         */
+        childMethod: async (params) => {
+          addLog(`childMethod called: ${JSON.stringify(params)}`)
+          return {
+            fromChild: true,
+            echo: params,
+            timestamp: Date.now()
+          }
+        },
+
+        /**
+         * 用于测试错误处理的方法
+         * 故意抛出错误，验证 SDK 能正确传递错误信息
+         */
+        childFailingMethod: async () => {
+          throw new Error('Intentional failure for testing')
+        }
+      },
+      debug: true
+    })
+
+    // ═══════════════════════════════════════════════════════════════════════════
+    // 监听父页面事件
+    // ═══════════════════════════════════════════════════════════════════════════
+    //
+    // 父页面可以通过 channel.emit('PARENT_EVENT', data) 发送事件
+    //
+    channel.on('PARENT_EVENT', (data) => {
+      addLog(`PARENT_EVENT received: ${JSON.stringify(data)}`, 'event')
+    })
+
+    // ═══════════════════════════════════════════════════════════════════════════
+    // 等待连接建立
+    // ═══════════════════════════════════════════════════════════════════════════
+    //
+    // channel.promise 会在握手完成后 resolve
+    // 返回的 remote 对象可以调用父页面暴露的方法
+    //
+    channel.promise.then((remote) => {
+      addLog('Connected to parent!', 'success')
+
+      // 暴露到 window，方便测试访问
+      window.remote = remote
+      window.channel = channel
+
+      // 绑定按钮：调用父页面方法
+      document.getElementById('call-parent-btn').onclick = async () => {
+        try {
+          addLog('Calling parentMethod...')
+          // remote.parentMethod() 会调用父页面的 parentMethod 方法
+          const result = await remote.parentMethod({ from: 'child', time: Date.now() })
+          addLog(`Result: ${JSON.stringify(result)}`, 'success')
+        } catch (err) {
+          addLog(`Error: ${err.message}`, 'error')
+        }
+      }
+
+      // 绑定按钮：向父页面发送事件
+      document.getElementById('emit-event-btn').onclick = () => {
+        addLog('Emitting CHILD_EVENT...')
+        channel.emit('CHILD_EVENT', { childData: 'Hello from child!' })
+      }
+    })
+
+    // ═══════════════════════════════════════════════════════════════════════════
+    // 暴露测试 API
+    // ═══════════════════════════════════════════════════════════════════════════
+    window.testAPI = {
+      getChannel: () => channel,
+      getRemote: () => window.remote,
+      addLog
+    }
+  </script>
+</body>
+</html>

@@ -1,0 +1,281 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Parent App - iframe-channel Test</title>
+  <style>
+    body { font-family: system-ui, sans-serif; padding: 20px; }
+    .container { display: flex; gap: 20px; }
+    .panel { flex: 1; border: 1px solid #ccc; padding: 15px; border-radius: 8px; }
+    iframe { width: 100%; height: 200px; border: 1px solid #ddd; }
+    button { margin: 5px; padding: 8px 16px; cursor: pointer; }
+    .log { background: #f5f5f5; padding: 10px; margin-top: 10px; font-family: monospace; font-size: 12px; max-height: 150px; overflow-y: auto; }
+    .log-item { margin: 2px 0; }
+    .success { color: green; }
+    .error { color: red; }
+    .event { color: blue; }
+  </style>
+</head>
+<body>
+  <!--
+  ═══════════════════════════════════════════════════════════════════════════════
+  E2E 测试 Fixture：父页面
+  ═══════════════════════════════════════════════════════════════════════════════
+
+  这是什么？
+  ──────────
+  这是一个测试用的 HTML 页面，模拟「使用 SDK 的父页面」场景。
+  Playwright 测试会打开这个页面，然后模拟用户点击按钮、检查日志等操作。
+
+  页面结构
+  ──────────
+  ┌─────────────────────────────────────────────────────────────────────┐
+  │                          Parent App                                  │
+  ├─────────────────────────────┬───────────────────────────────────────┤
+  │     SDK Child Panel         │      Traditional Child Panel          │
+  │  ┌───────────────────────┐  │   ┌───────────────────────────────┐   │
+  │  │  child-sdk.html       │  │   │  child-traditional.html       │   │
+  │  │  (iframe)             │  │   │  (iframe)                     │   │
+  │  └───────────────────────┘  │   └───────────────────────────────┘   │
+  │  [Call childMethod]         │   [Call getData]                      │
+  │  [Emit PARENT_EVENT]        │                                       │
+  │  ┌───────────────────────┐  │   ┌───────────────────────────────┐   │
+  │  │  日志区域 #sdk-log    │  │   │  日志区域 #traditional-log    │   │
+  │  └───────────────────────┘  │   └───────────────────────────────┘   │
+  └─────────────────────────────┴───────────────────────────────────────┘
+
+  测试如何使用这个页面？
+  ────────────────────────
+  1. page.goto('/tests/e2e/fixtures/parent.html')  → 打开此页面
+  2. page.click('#sdk-call-btn')  → 点击「调用子方法」按钮
+  3. expect(page.locator('#sdk-log')).toContainText('Result:')  → 检查日志
+
+  为什么要暴露 window.sdkRemote 等变量？
+  ─────────────────────────────────────────
+  测试中可以用 page.evaluate() 在浏览器中执行代码，直接调用 SDK API：
+
+    const result = await page.evaluate(async () => {
+      return await window.sdkRemote.someMethod()
+    })
+
+  这样可以测试一些无法通过 UI 触发的场景。
+
+  ═══════════════════════════════════════════════════════════════════════════════
+  -->
+
+  <h1>Parent App</h1>
+
+  <div class="container">
+    <!--
+    ═══════════════════════════════════════════════════════════════════════════
+    面板 1：SDK 模式子页面
+    ═══════════════════════════════════════════════════════════════════════════
+
+    测试场景：父子页面都使用 SDK，支持双向 RPC 和事件
+    子页面文件：child-sdk.html
+    -->
+    <div class="panel">
+      <h3>SDK Child (uses connectToParent)</h3>
+
+      <!-- iframe 加载子页面，SDK 会自动完成握手连接 -->
+      <iframe id="sdk-iframe" src="child-sdk.html"></iframe>
+
+      <div>
+        <!-- 测试按钮：点击后调用子页面方法 -->
+        <button id="sdk-call-btn">Call childMethod()</button>
+        <!-- 测试按钮：点击后向子页面发送事件 -->
+        <button id="sdk-emit-btn">Emit PARENT_EVENT</button>
+      </div>
+
+      <!-- 日志区域：显示 SDK 通信过程，测试会检查这里的文本 -->
+      <div id="sdk-log" class="log"></div>
+    </div>
+
+    <!--
+    ═══════════════════════════════════════════════════════════════════════════
+    面板 2：传统模式子页面
+    ═══════════════════════════════════════════════════════════════════════════
+
+    测试场景：父页面用 SDK，子页面用原生 postMessage
+    子页面文件：child-traditional.html
+    适用于：无法修改子页面代码的情况
+    -->
+    <div class="panel">
+      <h3>Traditional Child (no SDK)</h3>
+
+      <!-- 传统子页面不使用 SDK，通过原生 postMessage 通信 -->
+      <iframe id="traditional-iframe" src="child-traditional.html"></iframe>
+
+      <div>
+        <!-- 父页面无法主动调用传统子页面的方法，只能等子页面发起请求 -->
+        <button id="traditional-call-btn">Call getData()</button>
+      </div>
+
+      <!-- 日志区域 -->
+      <div id="traditional-log" class="log"></div>
+    </div>
+  </div>
+
+  <script type="module">
+    // ═══════════════════════════════════════════════════════════════════════════
+    // 引入 SDK
+    // ═══════════════════════════════════════════════════════════════════════════
+    //
+    // 注意这里引用的是 dist/index.js（打包后的文件）
+    // E2E 测试的目的是测试真实打包产物，而不是源码
+    //
+    import { connectToIframe } from '../../../dist/index.js'
+
+    // 获取当前页面的 origin，用于安全校验
+    const ORIGIN = window.location.origin
+
+    // ═══════════════════════════════════════════════════════════════════════════
+    // SDK 模式子页面连接
+    // ═══════════════════════════════════════════════════════════════════════════
+
+    const sdkLog = document.getElementById('sdk-log')
+    const sdkIframe = document.getElementById('sdk-iframe')
+
+    /**
+     * 日志函数：将消息显示在页面上
+     *
+     * 为什么不用 console.log？
+     * → 因为测试需要验证日志内容，用 DOM 元素更容易断言
+     */
+    function logSdk(message, type = '') {
+      const item = document.createElement('div')
+      item.className = `log-item ${type}`
+      item.textContent = `[${new Date().toLocaleTimeString()}] ${message}`
+      sdkLog.appendChild(item)
+      sdkLog.scrollTop = sdkLog.scrollHeight
+    }
+
+    /**
+     * 创建 SDK 通道
+     *
+     * connectToIframe() 参数说明：
+     * - iframe: 要连接的 iframe 元素
+     * - origin: 允许的 origin（安全校验）
+     * - methods: 暴露给子页面调用的方法
+     * - debug: 开启调试日志
+     */
+    const sdkChannel = connectToIframe({
+      iframe: sdkIframe,
+      origin: ORIGIN,
+      methods: {
+        // 这个方法可以被子页面调用
+        parentMethod: async (params) => {
+          logSdk(`parentMethod called with: ${JSON.stringify(params)}`)
+          return { fromParent: true, received: params }
+        }
+      },
+      debug: true
+    })
+
+    // 监听来自子页面的事件
+    sdkChannel.on('CHILD_EVENT', (data) => {
+      logSdk(`Received CHILD_EVENT: ${JSON.stringify(data)}`, 'event')
+    })
+
+    // 等待连接建立完成
+    // sdkChannel.promise 会在握手完成后 resolve，返回远程方法代理对象
+    sdkChannel.promise.then((remote) => {
+      logSdk('Connected to SDK child!', 'success')
+
+      // ⭐ 暴露到 window，方便测试中通过 page.evaluate() 访问
+      window.sdkRemote = remote
+      window.sdkChannel = sdkChannel
+
+      // 绑定按钮事件：调用子页面方法
+      document.getElementById('sdk-call-btn').onclick = async () => {
+        try {
+          logSdk('Calling childMethod...')
+          // remote.childMethod() 会调用子页面的 childMethod 方法
+          const result = await remote.childMethod({ from: 'parent', timestamp: Date.now() })
+          logSdk(`Result: ${JSON.stringify(result)}`, 'success')
+        } catch (err) {
+          logSdk(`Error: ${err.message}`, 'error')
+        }
+      }
+
+      // 绑定按钮事件：向子页面发送事件
+      document.getElementById('sdk-emit-btn').onclick = () => {
+        logSdk('Emitting PARENT_EVENT...')
+        sdkChannel.emit('PARENT_EVENT', { greeting: 'Hello from parent!' })
+      }
+    })
+
+    // ═══════════════════════════════════════════════════════════════════════════
+    // 传统模式子页面连接
+    // ═══════════════════════════════════════════════════════════════════════════
+    //
+    // 这种模式下，子页面不使用 SDK，而是直接发送 postMessage
+    // SDK 会自动处理这种「简单消息格式」
+    //
+
+    const traditionalLog = document.getElementById('traditional-log')
+    const traditionalIframe = document.getElementById('traditional-iframe')
+
+    function logTraditional(message, type = '') {
+      const item = document.createElement('div')
+      item.className = `log-item ${type}`
+      item.textContent = `[${new Date().toLocaleTimeString()}] ${message}`
+      traditionalLog.appendChild(item)
+      traditionalLog.scrollTop = traditionalLog.scrollHeight
+    }
+
+    /**
+     * 传统模式连接
+     *
+     * methods 中定义的方法可以被子页面通过 postMessage 调用
+     * 子页面只需要发送：{ action: 'getData', data: {...}, requestId: 'xxx' }
+     */
+    const traditionalChannel = connectToIframe({
+      iframe: traditionalIframe,
+      origin: ORIGIN,
+      methods: {
+        getData: async (params) => {
+          logTraditional(`getData called with: ${JSON.stringify(params)}`)
+          return {
+            success: true,
+            data: {
+              userId: 'user-123',
+              name: 'Test User',
+              requestedId: params?.id
+            }
+          }
+        },
+        sendNotification: async (params) => {
+          logTraditional(`sendNotification called: ${JSON.stringify(params)}`)
+          return { sent: true, message: params?.message }
+        }
+      },
+      debug: true
+    })
+
+    // 传统模式不需要等待握手（子页面不会发起握手）
+    logTraditional('Waiting for traditional child messages...')
+    window.traditionalChannel = traditionalChannel
+
+    // 父页面无法主动调用传统子页面（因为子页面没有 SDK）
+    document.getElementById('traditional-call-btn').onclick = () => {
+      logTraditional('Parent cannot call traditional child (no SDK)')
+      logTraditional('Traditional child must initiate calls', 'event')
+    }
+
+    // ═══════════════════════════════════════════════════════════════════════════
+    // 暴露测试 API
+    // ═══════════════════════════════════════════════════════════════════════════
+    //
+    // 这些 API 方便测试代码访问内部状态
+    //
+    window.testAPI = {
+      getSdkChannel: () => sdkChannel,
+      getSdkRemote: () => window.sdkRemote,
+      getTraditionalChannel: () => traditionalChannel,
+      logSdk,
+      logTraditional
+    }
+  </script>
+</body>
+</html>

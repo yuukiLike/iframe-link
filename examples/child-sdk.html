@@ -1,0 +1,291 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <title>SDK 子应用</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: system-ui, -apple-system, sans-serif;
+      min-height: 100vh;
+      padding: 20px;
+      background: #3b82f6;
+      transition: background 0.3s;
+    }
+
+    .badge {
+      display: inline-block;
+      padding: 4px 10px;
+      background: rgba(255,255,255,0.2);
+      border-radius: 6px;
+      font-size: 11px;
+      color: white;
+      margin-bottom: 16px;
+    }
+
+    .section {
+      background: rgba(255,255,255,0.95);
+      border-radius: 12px;
+      padding: 16px;
+      margin-bottom: 16px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    }
+    .section-title {
+      font-size: 13px;
+      font-weight: 600;
+      color: #1e293b;
+      margin-bottom: 12px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .section-title .uid-badge {
+      padding: 2px 8px;
+      background: #6366f1;
+      color: white;
+      border-radius: 4px;
+      font-size: 11px;
+      font-weight: 500;
+    }
+
+    .user-list {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    .user-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 10px 12px;
+      background: #f8fafc;
+      border-radius: 8px;
+      transition: background 0.2s;
+    }
+    .user-item:hover { background: #f1f5f9; }
+    .user-avatar {
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #6366f1, #8b5cf6);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      font-size: 14px;
+      font-weight: 600;
+    }
+    .user-info { flex: 1; }
+    .user-name { font-size: 13px; font-weight: 500; color: #1e293b; }
+    .user-desc { font-size: 11px; color: #64748b; }
+    .user-btn {
+      padding: 6px 12px;
+      border: none;
+      background: #3b82f6;
+      color: white;
+      border-radius: 6px;
+      font-size: 11px;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+    .user-btn:hover { background: #2563eb; }
+
+    .status-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 8px;
+      margin-bottom: 12px;
+    }
+    .status-btn {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 4px;
+      padding: 10px 8px;
+      border: 2px solid transparent;
+      background: #f8fafc;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .status-btn:hover { background: #f1f5f9; }
+    .status-btn.active { border-color: #3b82f6; background: #eff6ff; }
+    .status-btn .emoji { font-size: 18px; }
+    .status-btn .label { font-size: 10px; color: #64748b; }
+
+    .emoji-grid {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+    }
+    .emoji-btn {
+      width: 36px;
+      height: 36px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border: none;
+      background: #f8fafc;
+      border-radius: 8px;
+      font-size: 18px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .emoji-btn:hover { background: #e0f2fe; transform: scale(1.1); }
+  </style>
+</head>
+<body>
+  <div class="badge">SDK 模式</div>
+
+  <div class="section">
+    <div class="section-title">
+      📋 联系人列表
+      <span class="uid-badge" id="uid-display">UID: 1001</span>
+    </div>
+    <div class="user-list" id="user-list"></div>
+  </div>
+
+  <div class="section">
+    <div class="section-title">🔄 状态设置</div>
+    <div class="status-grid">
+      <button class="status-btn active" data-status="在线" data-emoji="🟢">
+        <span class="emoji">🟢</span><span class="label">在线</span>
+      </button>
+      <button class="status-btn" data-status="忙碌" data-emoji="🔴">
+        <span class="emoji">🔴</span><span class="label">忙碌</span>
+      </button>
+      <button class="status-btn" data-status="离开" data-emoji="🟡">
+        <span class="emoji">🟡</span><span class="label">离开</span>
+      </button>
+      <button class="status-btn" data-status="隐身" data-emoji="⚫">
+        <span class="emoji">⚫</span><span class="label">隐身</span>
+      </button>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="section-title">🎨 设置父应用背景色</div>
+    <div style="display: flex; align-items: center; gap: 10px;">
+      <input type="color" id="parent-color" value="#0f172a" style="width: 50px; height: 32px; border: none; border-radius: 6px; cursor: pointer;">
+      <span style="font-size: 12px; color: #64748b;">点击选择颜色</span>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="section-title">😀 发送表情</div>
+    <div class="emoji-grid">
+      <button class="emoji-btn" data-emoji="😀">😀</button>
+      <button class="emoji-btn" data-emoji="😍">😍</button>
+      <button class="emoji-btn" data-emoji="🎉">🎉</button>
+      <button class="emoji-btn" data-emoji="👍">👍</button>
+      <button class="emoji-btn" data-emoji="❤️">❤️</button>
+      <button class="emoji-btn" data-emoji="🔥">🔥</button>
+      <button class="emoji-btn" data-emoji="✨">✨</button>
+      <button class="emoji-btn" data-emoji="🚀">🚀</button>
+      <button class="emoji-btn" data-emoji="💯">💯</button>
+      <button class="emoji-btn" data-emoji="🤔">🤔</button>
+    </div>
+  </div>
+
+  <script type="module">
+    import { connectToParent } from '/dist/index.js'
+
+    // 用户数据
+    const userData = {
+      '1001': [
+        { id: 1, name: '张三', desc: '产品经理' },
+        { id: 2, name: '李四', desc: '前端开发' },
+        { id: 3, name: '王五', desc: 'UI设计师' }
+      ],
+      '1002': [
+        { id: 4, name: '赵六', desc: '后端开发' },
+        { id: 5, name: '钱七', desc: '测试工程师' }
+      ],
+      '1003': [
+        { id: 6, name: '孙八', desc: '运维工程师' },
+        { id: 7, name: '周九', desc: '数据分析师' },
+        { id: 8, name: '吴十', desc: '项目经理' },
+        { id: 9, name: '郑十一', desc: '架构师' }
+      ]
+    }
+
+    let remote = null
+    let currentUid = '1001'
+
+    // 渲染用户列表
+    function renderUsers(uid) {
+      const users = userData[uid] || []
+      const container = document.getElementById('user-list')
+      document.getElementById('uid-display').textContent = `UID: ${uid}`
+
+      container.innerHTML = users.map(u => `
+        <div class="user-item">
+          <div class="user-avatar">${u.name[0]}</div>
+          <div class="user-info">
+            <div class="user-name">${u.name}</div>
+            <div class="user-desc">${u.desc}</div>
+          </div>
+          <button class="user-btn" data-name="${u.name}">发消息</button>
+        </div>
+      `).join('')
+
+      // 绑定发消息按钮
+      container.querySelectorAll('.user-btn').forEach(btn => {
+        btn.onclick = () => {
+          if (remote) {
+            remote.showMessage({ from: 'SDK子应用', message: `向 ${btn.dataset.name} 发送了消息` })
+          }
+        }
+      })
+    }
+
+    // 状态按钮
+    document.querySelectorAll('.status-btn').forEach(btn => {
+      btn.onclick = () => {
+        document.querySelectorAll('.status-btn').forEach(b => b.classList.remove('active'))
+        btn.classList.add('active')
+        if (remote) {
+          remote.updateStatus({ status: btn.dataset.status, emoji: btn.dataset.emoji })
+        }
+      }
+    })
+
+    // 表情按钮
+    document.querySelectorAll('.emoji-btn').forEach(btn => {
+      btn.onclick = () => {
+        if (remote) {
+          remote.showMessage({ from: 'SDK子应用', message: `发送了表情 ${btn.dataset.emoji}` })
+        }
+      }
+    })
+
+    // 设置父应用背景色
+    document.getElementById('parent-color').addEventListener('input', (e) => {
+      if (remote) {
+        remote.setBackground(e.target.value)
+      }
+    })
+
+    // 连接父应用
+    const channel = connectToParent({
+      allowedOrigins: ['*'],
+      methods: {
+        setUid: (uid) => {
+          currentUid = uid
+          renderUsers(uid)
+          return { success: true }
+        },
+        setBackground: (color) => {
+          document.body.style.background = color
+          return { success: true }
+        }
+      }
+    })
+
+    channel.promise.then(r => {
+      remote = r
+      renderUsers(currentUid)
+    })
+  </script>
+</body>
+</html>

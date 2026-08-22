@@ -1,0 +1,70 @@
+{
+  "name": "iframe-channel",
+  "version": "1.0.0",
+  "description": "Promise-based iframe communication SDK with RPC and event support",
+  "keywords": [
+    "iframe",
+    "postMessage",
+    "communication",
+    "rpc",
+    "events",
+    "cross-origin"
+  ],
+  "author": "yuukiLike <YuukiJyoudai@outlook.com>",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/yuukiLike/iframe-channel.git"
+  },
+  "bugs": {
+    "url": "https://github.com/yuukiLike/iframe-channel/issues"
+  },
+  "homepage": "https://github.com/yuukiLike/iframe-channel#readme",
+  "type": "module",
+  "main": "./dist/index.cjs",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "import": {
+        "types": "./dist/index.d.ts",
+        "default": "./dist/index.js"
+      },
+      "require": {
+        "types": "./dist/index.d.cts",
+        "default": "./dist/index.cjs"
+      }
+    }
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "dev": "concurrently \"tsup --watch\" \"npx live-server --port=3000 --open=/examples/index.html --wait=1000\"",
+    "build": "tsup",
+    "demo": "npm run build && npx live-server --port=3000 --open=/examples/index.html",
+    "prepublishOnly": "npm run build",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:coverage": "vitest run --coverage",
+    "test:e2e": "npm run build && playwright test",
+    "test:e2e:ui": "playwright test --ui",
+    "test:all": "npm run test && npm run test:e2e"
+  },
+  "dependencies": {
+    "debug": "^4.4.3"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.40.0",
+    "@types/debug": "^4.1.12",
+    "@types/node": "^25.0.6",
+    "@vitest/coverage-v8": "^1.0.0",
+    "concurrently": "^9.2.1",
+    "happy-dom": "^12.0.0",
+    "live-server": "^1.2.2",
+    "serve": "^14.0.0",
+    "tsup": "^8.0.0",
+    "typescript": "^5.3.0",
+    "vitest": "^1.0.0"
+  }
+}
