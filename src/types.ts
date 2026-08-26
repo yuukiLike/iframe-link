@@ -1,4 +1,4 @@
-export type AnyFunction = (...args: any[]) => any
+export type AnyFunction = (params: any) => any
 export type MessageHandler = (message: Message | NativeMessage) => void
 
 /**
@@ -64,10 +64,18 @@ export type OriginPattern = string | RegExp
  */
 export const DEFAULT_ALLOWED_ORIGIN = /^https:\/\/oa\.example\.com$/
 
-export interface ConnectOptions {
-  iframe?: string | HTMLIFrameElement
-  origin?: string
-  allowedOrigins?: OriginPattern[]
+interface BaseConnectOptions {
   methods?: Record<string, AnyFunction>
   debug?: boolean
 }
+
+export interface ConnectToIframeOptions extends BaseConnectOptions {
+  iframe: string | HTMLIFrameElement
+  origin: string
+}
+
+export interface ConnectToParentOptions extends BaseConnectOptions {
+  allowedOrigins?: OriginPattern[]
+}
+
+export type ConnectOptions = ConnectToIframeOptions | ConnectToParentOptions

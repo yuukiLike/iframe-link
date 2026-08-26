@@ -8,11 +8,11 @@ type Messenger = ReturnType<typeof createMessenger>
  * 日志命名空间
  *
  * 启用方式：
- * - 浏览器: localStorage.debug = 'iframe-sdk:*'
- * - 只看特定模块: localStorage.debug = 'iframe-sdk:bridge'
+ * - 浏览器: localStorage.debug = 'iframe-rpc-kit:*'
+ * - 只看特定模块: localStorage.debug = 'iframe-rpc-kit:bridge'
  * - 查看时间戳: Chrome DevTools → Console → 设置 → Show timestamps
  */
-const NAMESPACE = 'iframe-sdk'
+const NAMESPACE = 'iframe-rpc-kit'
 
 // 预创建常用模块的日志器
 export const log = {

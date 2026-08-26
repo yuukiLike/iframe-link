@@ -3,7 +3,8 @@ import type {
   Message,
   NativeMessage,
   NativeResponse,
-  ConnectOptions,
+  ConnectToIframeOptions,
+  ConnectToParentOptions,
   AnyFunction,
 } from "./types";
 import { SDK_MESSAGE_TYPES, DEFAULT_ALLOWED_ORIGIN } from "./types";
@@ -264,7 +265,7 @@ function createChannel<T = any>(options: {
  * 父应用：连接到 iframe 子应用
  */
 export function connectToIframe<T = any>(
-  options: ConnectOptions
+  options: ConnectToIframeOptions
 ): IframeChannel<T> {
   const { iframe, origin, methods, debug } = options;
 
@@ -293,7 +294,7 @@ export function connectToIframe<T = any>(
  * 子应用：连接到父窗口
  */
 export function connectToParent<T = any>(
-  options: ConnectOptions = {}
+  options: ConnectToParentOptions = {}
 ): IframeChannel<T> {
   const { allowedOrigins = [DEFAULT_ALLOWED_ORIGIN], methods, debug } = options;
 

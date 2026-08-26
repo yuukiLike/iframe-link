@@ -1,14 +1,17 @@
 {
-  "name": "iframe-channel",
+  "name": "iframe-rpc-kit",
   "version": "1.0.0",
-  "description": "Promise-based iframe communication SDK with RPC and event support",
+  "description": "Promise-based, bidirectional iframe RPC and events over postMessage, with handshake retries and origin checks.",
   "keywords": [
     "iframe",
-    "postMessage",
-    "communication",
+    "iframe-rpc",
+    "postmessage",
+    "postmessage-rpc",
     "rpc",
     "events",
-    "cross-origin"
+    "cross-origin",
+    "handshake",
+    "typescript"
   ],
   "author": "yuukiLike <YuukiJyoudai@outlook.com>",
   "license": "MIT",
@@ -21,6 +24,7 @@
   },
   "homepage": "https://github.com/yuukiLike/iframe-channel#readme",
   "type": "module",
+  "sideEffects": false,
   "main": "./dist/index.cjs",
   "module": "./dist/index.js",
   "types": "./dist/index.d.ts",
@@ -37,13 +41,21 @@
     }
   },
   "files": [
-    "dist"
+    "dist",
+    "README.zh-CN.md",
+    "README.ja.md",
+    "THIRD_PARTY_NOTICES.md",
+    "docs/assets"
   ],
+  "publishConfig": {
+    "access": "public"
+  },
   "scripts": {
     "dev": "concurrently \"tsup --watch\" \"npx live-server --port=3000 --open=/examples/index.html --wait=1000\"",
     "build": "tsup",
     "demo": "npm run build && npx live-server --port=3000 --open=/examples/index.html",
-    "prepublishOnly": "npm run build",
+    "prepack": "npm run build",
+    "prepublishOnly": "npm run test:all",
     "test": "vitest run",
     "test:watch": "vitest",
     "test:coverage": "vitest run --coverage",

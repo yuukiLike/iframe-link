@@ -1,9 +1,9 @@
 /**
- * iframe-channel - Promise-based iframe communication SDK
+ * iframe-rpc-kit - Promise-based iframe communication SDK
  *
  * Parent app example:
  * ```ts
- * import { connectToIframe } from 'iframe-channel'
+ * import { connectToIframe } from 'iframe-rpc-kit'
  *
  * const channel = connectToIframe({
  *   iframe: '#myIframe',
@@ -18,7 +18,7 @@
  *
  * Child app example:
  * ```ts
- * import { connectToParent } from 'iframe-channel'
+ * import { connectToParent } from 'iframe-rpc-kit'
  *
  * const channel = connectToParent({
  *   allowedOrigins: ['https://parent.com'],
@@ -38,6 +38,8 @@ export type {
   NativeMessage,
   NativeResponse,
   ConnectOptions,
+  ConnectToIframeOptions,
+  ConnectToParentOptions,
   SDKMessageType,
   OriginPattern
 } from './types'
