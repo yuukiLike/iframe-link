@@ -1,27 +1,33 @@
-# iframe-rpc-kit
+# iframe RPC
 
-Promise-based RPC and events between an iframe and its parent, built on `window.postMessage`.
+A small, Promise-based RPC and event channel between an iframe and its parent, built on `window.postMessage`.
 
 English · [简体中文](README.zh-CN.md) · [日本語](README.ja.md)
 
-![iframe-rpc-kit SDK demo](docs/assets/sdk-demo.png)
+## Why
 
-Promise RPC · Events · Handshake retries · Origin checks · SDK-less child requests · ESM / CJS / TypeScript
+`postMessage` moves messages, but it does not provide request IDs, Promise resolution, event routing, or a reliable way to know when the other side is ready. Rebuilding that layer for every iframe is repetitive, and Origin checks are easy to miss.
+
+This SDK turns the parent and iframe into two ends of one small channel: expose methods, await remote calls, emit events, and handle load-order races with a READY/ACK handshake.
+
+![iframe RPC demo](docs/assets/sdk-demo.png)
 
 ## Install
 
+The npm package name is still being decided.
+
 ```bash
-pnpm add iframe-rpc-kit
-# npm install iframe-rpc-kit
-# yarn add iframe-rpc-kit
+pnpm add <package-name>
+# npm install <package-name>
+# yarn add <package-name>
 ```
 
-## Usage
+## Quick Start
 
-Parent:
+### Parent
 
 ```ts
-import { connectToIframe } from 'iframe-rpc-kit'
+import { connectToIframe } from '<package-name>'
 
 type ChildApi = {
   getStatus(input: { userId: string }): Promise<{ online: boolean }>
@@ -35,16 +41,16 @@ const channel = connectToIframe<ChildApi>({
   }
 })
 
+channel.on('STATUS_CHANGED', console.log)
+
 const child = await channel.promise
 await child.getStatus({ userId: '42' })
-
-channel.on('STATUS_CHANGED', console.log)
 ```
 
-Child:
+### Child
 
 ```ts
-import { connectToParent } from 'iframe-rpc-kit'
+import { connectToParent } from '<package-name>'
 
 type ParentApi = {
   getTheme(): Promise<{ accent: string }>
@@ -63,15 +69,29 @@ await parent.getTheme()
 channel.emit('STATUS_CHANGED', { online: true })
 ```
 
-`connectToIframe()` and `connectToParent()` return `{ promise, on, off, emit, destroy }`. Call `destroy()` when the iframe is removed.
+Call `channel.destroy()` when the iframe is removed.
 
-## Notes
+## API
 
-- Configure exact trusted Origins in production; do not use `'*'`.
-- The parent checks both the configured Origin and iframe window. The child checks `allowedOrigins`; READY messages use `targetOrigin: '*'`.
+`connectToIframe({ iframe, origin, methods })` connects a parent page to an iframe. `connectToParent({ allowedOrigins, methods })` connects an iframe to its parent page.
+
+| Member | Purpose |
+| --- | --- |
+| `promise` | Resolves to the remote method proxy after the handshake. |
+| `on(type, handler)` | Subscribes to an event. |
+| `off(type, handler)` | Unsubscribes from an event. |
+| `emit(type, data?)` | Emits an event to the other side. |
+| `destroy()` | Removes listeners and rejects pending RPC calls. |
+
+`methods` exposes local functions to the other side.
+
+## Safety & Limits
+
+- Configure exact trusted Origins in production; do not configure a wildcard Origin.
+- The parent validates the configured Origin and iframe source. The child validates `allowedOrigins` but does not separately require `event.source === window.parent`; READY messages use `targetOrigin: '*'`.
 - Message values must be JSON-serializable. Each RPC accepts one optional payload.
-- RPC timeout and cancellation are not built in. Without an ACK after five READY attempts, `promise` stays pending.
-- SDK-less child compatibility is child → SDK parent only. Without READY, the parent's `promise` stays pending.
+- Timeout and cancellation are not built in. Without an ACK after five READY attempts, `promise` stays pending.
+- An SDK-less child can call methods exposed by an SDK parent, but it does not complete the SDK handshake.
 
 ## License
 

@@ -1,27 +1,33 @@
-# iframe-rpc-kit
+# iframe RPC
 
-`window.postMessage` を使った、iframe と親ページ間の Promise ベース RPC / イベント通信です。
+`window.postMessage` を使い、iframe と親ページの間で軽量な Promise ベースの RPC とイベント通信を実現します。
 
 [English](README.md) · [简体中文](README.zh-CN.md) · 日本語
 
-![iframe-rpc-kit SDK デモ](docs/assets/sdk-demo.png)
+## 特長
 
-Promise RPC · イベント · ハンドシェイク再試行 · Origin 検証 · SDK を使わない子ページからのリクエスト · ESM / CJS / TypeScript
+`postMessage` はメッセージを送るだけで、リクエスト ID、Promise による応答、イベントの振り分け、相手側の準備完了を確実に確認する仕組みまでは提供しません。iframe ごとに同じ仕組みを作り直すのは手間がかかり、Origin 検証も見落としやすくなります。
+
+この SDK は親ページと iframe を小さな双方向チャネルでつなぎます。メソッドの公開、リモート呼び出し、イベント送信に加え、READY/ACK ハンドシェイクで読み込み順の違いにも対応します。
+
+![iframe RPC デモ](docs/assets/sdk-demo.png)
 
 ## インストール
 
+npm パッケージ名は現在検討中です。
+
 ```bash
-pnpm add iframe-rpc-kit
-# npm install iframe-rpc-kit
-# yarn add iframe-rpc-kit
+pnpm add <package-name>
+# npm install <package-name>
+# yarn add <package-name>
 ```
 
-## 使い方
+## クイックスタート
 
-親ページ：
+### 親ページ
 
 ```ts
-import { connectToIframe } from 'iframe-rpc-kit'
+import { connectToIframe } from '<package-name>'
 
 type ChildApi = {
   getStatus(input: { userId: string }): Promise<{ online: boolean }>
@@ -35,16 +41,16 @@ const channel = connectToIframe<ChildApi>({
   }
 })
 
+channel.on('STATUS_CHANGED', console.log)
+
 const child = await channel.promise
 await child.getStatus({ userId: '42' })
-
-channel.on('STATUS_CHANGED', console.log)
 ```
 
-子ページ：
+### 子ページ
 
 ```ts
-import { connectToParent } from 'iframe-rpc-kit'
+import { connectToParent } from '<package-name>'
 
 type ParentApi = {
   getTheme(): Promise<{ accent: string }>
@@ -63,15 +69,29 @@ await parent.getTheme()
 channel.emit('STATUS_CHANGED', { online: true })
 ```
 
-`connectToIframe()` と `connectToParent()` は `{ promise, on, off, emit, destroy }` を返します。iframe を削除するときは `destroy()` を呼び出してください。
+iframe を削除するときは `channel.destroy()` を呼び出してください。
 
-## 注意点
+## API
 
-- 本番環境では信頼できる Origin を明示し、`'*'` は使用しないでください。
-- 親側は設定した Origin と送信元 iframe を検証します。子側は `allowedOrigins` で検証し、READY は `targetOrigin: '*'` で送信されます。
+`connectToIframe({ iframe, origin, methods })` は親ページから iframe へ接続し、`connectToParent({ allowedOrigins, methods })` は iframe から親ページへ接続します。
+
+| メンバー | 用途 |
+| --- | --- |
+| `promise` | ハンドシェイク後、リモートメソッドのプロキシに解決されます。 |
+| `on(type, handler)` | イベントを購読します。 |
+| `off(type, handler)` | イベント購読を解除します。 |
+| `emit(type, data?)` | 相手側へイベントを送信します。 |
+| `destroy()` | リスナーを削除し、保留中の RPC を reject します。 |
+
+`methods` で相手側にローカルメソッドを公開します。
+
+## セキュリティと制限
+
+- 本番環境では信頼できる Origin を明示し、ワイルドカードの Origin は設定しないでください。
+- 親側は設定した Origin と送信元 iframe を検証します。子側は `allowedOrigins` で検証しますが、`event.source === window.parent` は個別に要求しません。READY は `targetOrigin: '*'` で送信されます。
 - メッセージの値は JSON でシリアライズ可能である必要があります。各 RPC には、省略可能なペイロードを 1 つ渡せます。
-- RPC のタイムアウトとキャンセルは内蔵していません。READY を 5 回送っても ACK が届かない場合、`promise` は pending のままです。
-- SDK を使わない子ページとの互換経路は「子ページ → SDK 親ページ」のみです。READY がない場合、親側の `promise` は pending のままです。
+- タイムアウトとキャンセルは内蔵していません。READY を 5 回送っても ACK が届かない場合、`promise` は pending のままです。
+- SDK を使わない子ページから親側の公開メソッドを呼び出せますが、SDK のハンドシェイクは完了しません。
 
 ## ライセンス
 
