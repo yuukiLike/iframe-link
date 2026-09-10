@@ -1,6 +1,6 @@
 {
   "name": "iframe-link",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "packageManager": "pnpm@11.14.0",
   "description": "Minimalist iframe communication for JavaScript and TypeScript, with Promise-based RPC and events over postMessage.",
   "keywords": [
