@@ -2,7 +2,7 @@
   "name": "iframe-link",
   "version": "1.0.0",
   "packageManager": "pnpm@11.14.0",
-  "description": "Simple communication between an iframe and its parent. Promise-based calls and events over postMessage.",
+  "description": "Minimalist iframe communication for JavaScript and TypeScript, with Promise-based RPC and events over postMessage.",
   "keywords": [
     "iframe",
     "iframe-rpc",
@@ -12,7 +12,8 @@
     "events",
     "cross-origin",
     "handshake",
-    "typescript"
+    "typescript",
+    "minimalist"
   ],
   "author": "yuukiLike <YuukiJyoudai@outlook.com>",
   "license": "MIT",
