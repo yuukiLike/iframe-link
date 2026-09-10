@@ -1,8 +1,10 @@
-# iframe RPC
+# iframe-link
 
-`window.postMessage` を使い、iframe と親ページの間で軽量な Promise ベースの RPC とイベント通信を実現します。
+iframe と親ページの通信をシンプルに。
 
-[English](README.md) · [简体中文](README.zh-CN.md) · 日本語
+`window.postMessage` を使い、Promise ベースのリモート呼び出しとイベント通信を提供します。
+
+[English](../README.md) · [简体中文](README.zh-CN.md) · 日本語
 
 ## 特長
 
@@ -10,16 +12,16 @@
 
 この SDK は親ページと iframe を小さな双方向チャネルでつなぎます。メソッドの公開、リモート呼び出し、イベント送信に加え、READY/ACK ハンドシェイクで読み込み順の違いにも対応します。
 
-![iframe RPC デモ](docs/assets/sdk-demo.png)
+![iframe-link デモ](assets/sdk-demo.ja.png)
 
 ## インストール
 
-npm パッケージ名は現在検討中です。
+npm にはまだ公開していません。公開後は、次のコマンドでインストールできます。
 
 ```bash
-pnpm add <package-name>
-# npm install <package-name>
-# yarn add <package-name>
+pnpm add iframe-link
+# npm install iframe-link
+# yarn add iframe-link
 ```
 
 ## クイックスタート
@@ -27,7 +29,7 @@ pnpm add <package-name>
 ### 親ページ
 
 ```ts
-import { connectToIframe } from '<package-name>'
+import { connectToIframe } from 'iframe-link'
 
 type ChildApi = {
   getStatus(input: { userId: string }): Promise<{ online: boolean }>
@@ -50,7 +52,7 @@ await child.getStatus({ userId: '42' })
 ### 子ページ
 
 ```ts
-import { connectToParent } from '<package-name>'
+import { connectToParent } from 'iframe-link'
 
 type ParentApi = {
   getTheme(): Promise<{ accent: string }>
@@ -88,11 +90,16 @@ iframe を削除するときは `channel.destroy()` を呼び出してくださ�
 ## セキュリティと制限
 
 - 本番環境では信頼できる Origin を明示し、ワイルドカードの Origin は設定しないでください。
-- 親側は設定した Origin と送信元 iframe を検証します。子側は `allowedOrigins` で検証しますが、`event.source === window.parent` は個別に要求しません。READY は `targetOrigin: '*'` で送信されます。
+- 親側は設定した Origin と送信元 iframe を検証します。子側は `allowedOrigins` を検証し、`event.source === window.parent` であることも確認します。
+- 親ページの Origin が確認されるまでは、子側は READY のみを `targetOrigin: '*'` で送信します。`emit()` は `await channel.promise` の後に呼び出してください。子側が準備完了前に送信したイベントは無視されます。
 - メッセージの値は JSON でシリアライズ可能である必要があります。各 RPC には、省略可能なペイロードを 1 つ渡せます。
 - タイムアウトとキャンセルは内蔵していません。READY を 5 回送っても ACK が届かない場合、`promise` は pending のままです。
 - SDK を使わない子ページから親側の公開メソッドを呼び出せますが、SDK のハンドシェイクは完了しません。
 
+## コントリビューション
+
+ローカル開発とテストについては、[貢献ガイド](https://github.com/yuukiLike/iframe-channel/blob/main/docs/CONTRIBUTING.md)を参照してください。
+
 ## ライセンス
 
-[MIT](LICENSE)
+[MIT](../LICENSE) · [サードパーティの通知](THIRD_PARTY_NOTICES.md)

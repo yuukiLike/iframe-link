@@ -1,9 +1,9 @@
 /**
- * iframe-rpc-kit - Promise-based iframe communication SDK
+ * iframe-link - Simple communication between an iframe and its parent.
  *
  * Parent app example:
  * ```ts
- * import { connectToIframe } from 'iframe-rpc-kit'
+ * import { connectToIframe } from 'iframe-link'
  *
  * const channel = connectToIframe({
  *   iframe: '#myIframe',
@@ -18,7 +18,7 @@
  *
  * Child app example:
  * ```ts
- * import { connectToParent } from 'iframe-rpc-kit'
+ * import { connectToParent } from 'iframe-link'
  *
  * const channel = connectToParent({
  *   allowedOrigins: ['https://parent.com'],

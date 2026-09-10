@@ -1,8 +1,10 @@
-# iframe RPC
+# iframe-link
 
-基于 `window.postMessage`，在 iframe 与父页面之间提供轻量的 Promise RPC 与事件通信。
+让 iframe 与父页面之间的通信更简单。
 
-[English](README.md) · 简体中文 · [日本語](README.ja.md)
+基于 `window.postMessage`，提供 Promise 远程调用与事件通信。
+
+[English](../README.md) · 简体中文 · [日本語](README.ja.md)
 
 ## 为什么使用
 
@@ -10,16 +12,16 @@
 
 这个 SDK 将父页面与 iframe 连接成一个轻量的双向通道：暴露方法、等待远程调用、发送事件，并通过 READY/ACK 握手处理加载顺序差异。
 
-![iframe RPC 演示](docs/assets/sdk-demo.png)
+![iframe-link 演示](assets/sdk-demo.zh-CN.png)
 
 ## 安装
 
-npm 包名仍在确定中。
+尚未发布到 npm。发布后可使用以下命令安装：
 
 ```bash
-pnpm add <package-name>
-# npm install <package-name>
-# yarn add <package-name>
+pnpm add iframe-link
+# npm install iframe-link
+# yarn add iframe-link
 ```
 
 ## 快速开始
@@ -27,7 +29,7 @@ pnpm add <package-name>
 ### 父页面
 
 ```ts
-import { connectToIframe } from '<package-name>'
+import { connectToIframe } from 'iframe-link'
 
 type ChildApi = {
   getStatus(input: { userId: string }): Promise<{ online: boolean }>
@@ -50,7 +52,7 @@ await child.getStatus({ userId: '42' })
 ### 子页面
 
 ```ts
-import { connectToParent } from '<package-name>'
+import { connectToParent } from 'iframe-link'
 
 type ParentApi = {
   getTheme(): Promise<{ accent: string }>
@@ -88,11 +90,16 @@ channel.emit('STATUS_CHANGED', { online: true })
 ## 安全与限制
 
 - 生产环境请配置明确可信的 Origin，不要配置通配 Origin。
-- 父页面会校验配置的 Origin 与来源 iframe；子页面通过 `allowedOrigins` 校验，但不会单独要求 `event.source === window.parent`。READY 消息使用 `targetOrigin: '*'`。
+- 父页面会校验配置的 Origin 与来源 iframe；子页面会校验 `allowedOrigins`，并要求 `event.source === window.parent`。
+- 确认父页面 Origin 之前，子页面只发送 READY 消息，使用 `targetOrigin: '*'`。请在 `await channel.promise` 后调用 `emit()`；子页面在就绪前发送的事件会被忽略。
 - 消息内容必须可被 JSON 序列化；每次 RPC 只接收一个可选参数。
 - 当前没有内置的超时或取消机制。连续 5 次 READY 未收到 ACK 时，`promise` 会保持 pending。
 - 未使用 SDK 的子页面可以调用 SDK 父页面暴露的方法，但不会完成 SDK 握手。
 
+## 贡献
+
+本地开发与测试请参阅[贡献指南](https://github.com/yuukiLike/iframe-channel/blob/main/docs/CONTRIBUTING.md)。
+
 ## 许可证
 
-[MIT](LICENSE)
+[MIT](../LICENSE) · [第三方声明](THIRD_PARTY_NOTICES.md)

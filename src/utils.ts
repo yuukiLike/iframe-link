@@ -8,11 +8,11 @@ type Messenger = ReturnType<typeof createMessenger>
  * 日志命名空间
  *
  * 启用方式：
- * - 浏览器: localStorage.debug = 'iframe-rpc-kit:*'
- * - 只看特定模块: localStorage.debug = 'iframe-rpc-kit:bridge'
+ * - 浏览器: localStorage.debug = 'iframe-link:*'
+ * - 只看特定模块: localStorage.debug = 'iframe-link:bridge'
  * - 查看时间戳: Chrome DevTools → Console → 设置 → Show timestamps
  */
-const NAMESPACE = 'iframe-rpc-kit'
+const NAMESPACE = 'iframe-link'
 
 // 预创建常用模块的日志器
 export const log = {
@@ -43,7 +43,12 @@ export function disableDebug() {
 export function isTrustedOrigin(origin: string, allowed: OriginPattern[]): boolean {
   const result = allowed.some(pattern => {
     if (pattern === '*') return true
-    if (pattern instanceof RegExp) return pattern.test(origin)
+    if (pattern instanceof RegExp) {
+      const matcher = pattern.global || pattern.sticky
+        ? new RegExp(pattern.source, pattern.flags)
+        : pattern
+      return matcher.test(origin)
+    }
     return pattern === origin
   })
 
@@ -66,6 +71,7 @@ function uuid(): string {
  * RPC 远程调用管理
  */
 class RPC {
+  private destroyed = false
   private pending = new Map<string, {
     resolve: (value: any) => void
     reject: (error: Error) => void
@@ -79,11 +85,18 @@ class RPC {
   }
 
   call(name: string, params?: any): Promise<any> {
+    if (this.destroyed) return Promise.reject(new Error('Destroyed'))
+
     return new Promise((resolve, reject) => {
       const id = uuid()
       log.rpc('发起调用: %s, id=%s, params=%O', name, id, params)
       this.pending.set(id, { resolve, reject })
-      this.messenger.send({ type: 'CALL', id, method: name, params })
+      try {
+        this.messenger.send({ type: 'CALL', id, method: name, params })
+      } catch (error) {
+        this.pending.delete(id)
+        reject(error)
+      }
     })
   }
 
@@ -116,7 +129,7 @@ class RPC {
     }
 
     this.pending.delete(id)
-    if (error) {
+    if (error !== undefined) {
       log.rpc('调用返回错误: id=%s, error=%s', id, error)
       p.reject(new Error(error))
     } else {
@@ -126,6 +139,7 @@ class RPC {
   }
 
   cleanup() {
+    this.destroyed = true
     log.rpc('清理 RPC, pending=%d', this.pending.size)
     this.pending.forEach(({ reject }) => reject(new Error('Destroyed')))
     this.pending.clear()

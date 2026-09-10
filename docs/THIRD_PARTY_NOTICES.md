@@ -1,6 +1,6 @@
 # Third-party notices
 
-`iframe-rpc-kit` bundles the following MIT-licensed packages in its browser build.
+`iframe-link` bundles the following MIT-licensed packages in its browser build.
 
 ## debug
 

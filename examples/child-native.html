@@ -1,8 +1,8 @@
 <!DOCTYPE html>
-<html lang="zh-CN">
+<html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>原生子应用</title>
+  <title data-i18n="nativeTitle">iframe-link — Native iframe</title>
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
     body {
@@ -135,44 +135,44 @@
   </style>
 </head>
 <body>
-  <div class="badge">原生 postMessage 模式（无 SDK）</div>
+  <div class="badge" data-i18n="nativeBadge">Native postMessage mode (no SDK)</div>
 
   <div class="section">
     <div class="section-title">
-      📋 联系人列表
+      <span data-i18n="contacts">📋 Contacts</span>
       <span class="uid-badge" id="uid-display">UID: 1001</span>
     </div>
     <div class="user-list" id="user-list"></div>
   </div>
 
   <div class="section">
-    <div class="section-title">🔄 状态设置</div>
+    <div class="section-title" data-i18n="status">🔄 Status</div>
     <div class="status-grid">
-      <button class="status-btn active" data-status="在线" data-emoji="🟢">
-        <span class="emoji">🟢</span><span class="label">在线</span>
+      <button class="status-btn active" data-status="Online" data-emoji="🟢">
+        <span class="emoji">🟢</span><span class="label" data-i18n="Online">Online</span>
       </button>
-      <button class="status-btn" data-status="忙碌" data-emoji="🔴">
-        <span class="emoji">🔴</span><span class="label">忙碌</span>
+      <button class="status-btn" data-status="Busy" data-emoji="🔴">
+        <span class="emoji">🔴</span><span class="label" data-i18n="Busy">Busy</span>
       </button>
-      <button class="status-btn" data-status="离开" data-emoji="🟡">
-        <span class="emoji">🟡</span><span class="label">离开</span>
+      <button class="status-btn" data-status="Away" data-emoji="🟡">
+        <span class="emoji">🟡</span><span class="label" data-i18n="Away">Away</span>
       </button>
-      <button class="status-btn" data-status="隐身" data-emoji="⚫">
-        <span class="emoji">⚫</span><span class="label">隐身</span>
+      <button class="status-btn" data-status="Invisible" data-emoji="⚫">
+        <span class="emoji">⚫</span><span class="label" data-i18n="Invisible">Invisible</span>
       </button>
     </div>
   </div>
 
   <div class="section">
-    <div class="section-title">🎨 设置父应用背景色</div>
+    <div class="section-title" data-i18n="parentBackground">🎨 Parent background</div>
     <div style="display: flex; align-items: center; gap: 10px;">
       <input type="color" id="parent-color" value="#0f172a" style="width: 50px; height: 32px; border: none; border-radius: 6px; cursor: pointer;">
-      <span style="font-size: 12px; color: #64748b;">点击选择颜色</span>
+      <span data-i18n="chooseColor" style="font-size: 12px; color: #64748b;">Choose a color</span>
     </div>
   </div>
 
   <div class="section">
-    <div class="section-title">😀 发送表情</div>
+    <div class="section-title" data-i18n="sendEmoji">😀 Send an emoji</div>
     <div class="emoji-grid">
       <button class="emoji-btn" data-emoji="😀">😀</button>
       <button class="emoji-btn" data-emoji="😍">😍</button>
@@ -187,29 +187,13 @@
     </div>
   </div>
 
-  <script>
+  <script type="module">
+    import { copy, localize } from '/examples/locale.js'
+
+    localize()
     /**
      * 原生 postMessage 通信 - 无 SDK
      */
-
-    // 用户数据
-    const userData = {
-      '1001': [
-        { id: 1, name: '张三', desc: '产品经理' },
-        { id: 2, name: '李四', desc: '前端开发' },
-        { id: 3, name: '王五', desc: 'UI设计师' }
-      ],
-      '1002': [
-        { id: 4, name: '赵六', desc: '后端开发' },
-        { id: 5, name: '钱七', desc: '测试工程师' }
-      ],
-      '1003': [
-        { id: 6, name: '孙八', desc: '运维工程师' },
-        { id: 7, name: '周九', desc: '数据分析师' },
-        { id: 8, name: '吴十', desc: '项目经理' },
-        { id: 9, name: '郑十一', desc: '架构师' }
-      ]
-    }
 
     let currentUid = '1001'
 
@@ -220,25 +204,25 @@
 
     // 渲染用户列表
     function renderUsers(uid) {
-      const users = userData[uid] || []
+      const users = copy.users[uid] || []
       const container = document.getElementById('user-list')
       document.getElementById('uid-display').textContent = `UID: ${uid}`
 
-      container.innerHTML = users.map(u => `
+      container.innerHTML = users.map(([name, desc]) => `
         <div class="user-item">
-          <div class="user-avatar">${u.name[0]}</div>
+          <div class="user-avatar">${name[0]}</div>
           <div class="user-info">
-            <div class="user-name">${u.name}</div>
-            <div class="user-desc">${u.desc}</div>
+            <div class="user-name">${name}</div>
+            <div class="user-desc">${desc}</div>
           </div>
-          <button class="user-btn" data-name="${u.name}">发消息</button>
+          <button class="user-btn" data-name="${name}">${copy.sendMessage}</button>
         </div>
       `).join('')
 
       // 绑定发消息按钮
       container.querySelectorAll('.user-btn').forEach(btn => {
         btn.onclick = () => {
-          callParent('showMessage', { from: '原生子应用', message: `向 ${btn.dataset.name} 发送了消息` })
+          callParent('showMessage', { from: copy.nativeIframe, message: copy.messageSent(btn.dataset.name) })
         }
       })
     }
@@ -263,14 +247,14 @@
       btn.onclick = () => {
         document.querySelectorAll('.status-btn').forEach(b => b.classList.remove('active'))
         btn.classList.add('active')
-        callParent('updateStatus', { status: btn.dataset.status, emoji: btn.dataset.emoji })
+        callParent('updateStatus', { status: copy[btn.dataset.status], emoji: btn.dataset.emoji })
       }
     })
 
     // 表情按钮
     document.querySelectorAll('.emoji-btn').forEach(btn => {
       btn.onclick = () => {
-        callParent('showMessage', { from: '原生子应用', message: `发送了表情 ${btn.dataset.emoji}` })
+        callParent('showMessage', { from: copy.nativeIframe, message: copy.emojiSent(btn.dataset.emoji) })
       }
     })
 

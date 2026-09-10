@@ -63,7 +63,7 @@ tests/e2e/
 │   └── child-traditional.html  ← 子页面（不使用 SDK）
 └── sdk-communication.spec.ts   ← 测试用例
 
-playwright.config.ts             ← Playwright 配置文件
+config/playwright.config.ts      ← Playwright 配置文件
 ```
 
 ### 什么是 Fixture？
@@ -156,16 +156,16 @@ npm run test:e2e
 npm run test:e2e:ui
 
 # 显示浏览器窗口
-npx playwright test --headed
+npx playwright test --config config/playwright.config.ts --headed
 
-# 慢速执行，便于观察
-npx playwright test --headed --slowmo=500
+# 逐步执行，便于观察
+npx playwright test --config config/playwright.config.ts --debug
 
 # 只运行包含 "handshake" 的测试
-npx playwright test --grep "handshake"
+npx playwright test --config config/playwright.config.ts --grep "handshake"
 
 # 只运行某个文件
-npx playwright test tests/e2e/sdk-communication.spec.ts
+npx playwright test --config config/playwright.config.ts tests/e2e/sdk-communication.spec.ts
 
 # 查看测试报告
 npx playwright show-report docs/reports/playwright
@@ -331,7 +331,7 @@ test.describe('自动重连', () => {
 
 ```bash
 # 只运行新写的测试
-npx playwright test --grep "自动重连"
+npx playwright test --config config/playwright.config.ts --grep "自动重连"
 
 # 或使用 UI 模式
 npm run test:e2e:ui

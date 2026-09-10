@@ -14,19 +14,19 @@ npx playwright install chromium
 
 ```bash
 # 运行所有测试
-npx playwright test
+npx playwright test --config config/playwright.config.ts
 
-# 只运行 MVP 测试
-npx playwright test mvp-color-block
+# 只运行 SDK 通信测试
+npx playwright test --config config/playwright.config.ts sdk-communication
 
 # 指定浏览器
-npx playwright test --project=chromium
+npx playwright test --config config/playwright.config.ts --project=chromium
 
 # 有头模式（看到浏览器界面）
-npx playwright test --headed
+npx playwright test --config config/playwright.config.ts --headed
 
 # UI 模式（可视化调试，强烈推荐）
-npx playwright test --ui
+npx playwright test --config config/playwright.config.ts --ui
 ```
 
 ## 3. iframe 测试核心 API
@@ -77,10 +77,10 @@ await expect(locator).toHaveValue('hello')
 
 ```bash
 # 暂停执行，手动调试
-npx playwright test --debug
+npx playwright test --config config/playwright.config.ts --debug
 
 # 生成测试报告
-npx playwright show-report
+npx playwright show-report docs/reports/playwright
 ```
 
 在代码中暂停：
@@ -90,10 +90,10 @@ await page.pause()  // 会打开调试器
 
 ## 6. 当前项目配置
 
-配置文件 `playwright.config.ts` 已设置：
-- 自动启动本地服务器 (`npx serve . -l 3456`)
+配置文件 `config/playwright.config.ts` 已设置：
+- 自动启动本地服务器 (`npx serve . -l 3456 --cors`)
 - 测试目录：`tests/e2e/`
-- 支持 Chromium/Firefox/WebKit
+- 当前启用 Chromium
 
 ## 7. 一句话总结
 

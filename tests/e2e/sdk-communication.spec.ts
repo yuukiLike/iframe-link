@@ -1,6 +1,6 @@
 /**
  * ═══════════════════════════════════════════════════════════════════════════════
- * iframe-rpc-kit SDK 端到端测试
+ * iframe-link SDK 端到端测试
  * ═══════════════════════════════════════════════════════════════════════════════
  *
  * 📚 Playwright 测试入门
@@ -28,7 +28,7 @@
  * 测试场景说明
  * ═══════════════════════════════════════════════════════════════════════════════
  *
- * 本文件测试 iframe-rpc-kit SDK 的两种使用模式：
+ * 本文件测试 iframe-link SDK 的两种使用模式：
  *
  * 1. SDK 模式（双端都用 SDK）
  *    ┌─────────────────┐         ┌─────────────────┐
@@ -466,29 +466,23 @@ test.describe('连接生命周期', () => {
     await page.goto('/tests/e2e/fixtures/parent.html')
     await expect(page.locator('#sdk-log')).toContainText('Connected to SDK child!')
 
-    // 销毁通道
     await page.evaluate(() => {
       const channel = (window as any).sdkChannel
+      const remote = (window as any).sdkRemote
+      const outcomes = (window as any).destroyOutcomes = { pending: 'pending', later: 'pending' }
+      const record = (key: string, call: Promise<unknown>) => call.then(
+        () => { outcomes[key] = 'resolved' },
+        (error: Error) => { outcomes[key] = error.message }
+      )
+      record('pending', remote.childMethod())
       channel.destroy()
+      record('later', remote.childMethod())
     })
 
-    // 销毁后尝试调用，应该失败
-    const result = await page.evaluate(async () => {
-      try {
-        const remote = (window as any).sdkRemote
-        // 设置超时，因为 destroy 后调用不会收到响应
-        const timeoutPromise = new Promise((_, reject) =>
-          setTimeout(() => reject(new Error('Call failed after destroy')), 1000)
-        )
-        await Promise.race([remote.childMethod(), timeoutPromise])
-        return { success: true }
-      } catch (err: any) {
-        return { success: false, error: err.message }
-      }
+    await expect.poll(() => page.evaluate(() => (window as any).destroyOutcomes)).toEqual({
+      pending: expect.stringMatching(/destroy/i),
+      later: expect.stringMatching(/destroy/i),
     })
-
-    // 销毁后调用应该失败（超时或被拒绝）
-    expect(result.success).toBe(false)
   })
 
   /**
@@ -501,16 +495,25 @@ test.describe('连接生命周期', () => {
     const sdkChildFrame = page.frameLocator('#sdk-iframe')
     await expect(page.locator('#sdk-log')).toContainText('Connected to SDK child!')
 
-    // 添加然后移除事件监听器
     await page.evaluate(() => {
       const channel = (window as any).sdkChannel
-      const handler = () => console.log('TEST_EVENT received')
+      const counts = (window as any).eventCounts = { removed: 0, retained: 0 }
+      const handler = (window as any).removedHandler = () => { counts.removed++ }
       channel.on('TEST_EVENT', handler)
-      channel.off('TEST_EVENT', handler)
+      channel.on('TEST_EVENT', () => { counts.retained++ })
     })
+    await sdkChildFrame.locator('body').evaluate(() => {
+      ;(window as any).channel.emit('TEST_EVENT')
+    })
+    await expect.poll(() => page.evaluate(() => (window as any).eventCounts)).toEqual({ removed: 1, retained: 1 })
 
-    // 主要验证 on/off 操作不会报错
-    expect(true).toBe(true)
+    await page.evaluate(() => {
+      ;(window as any).sdkChannel.off('TEST_EVENT', (window as any).removedHandler)
+    })
+    await sdkChildFrame.locator('body').evaluate(() => {
+      ;(window as any).channel.emit('TEST_EVENT')
+    })
+    await expect.poll(() => page.evaluate(() => (window as any).eventCounts)).toEqual({ removed: 1, retained: 2 })
   })
 })
 
@@ -519,7 +522,7 @@ test.describe('连接生命周期', () => {
 // ═══════════════════════════════════════════════════════════════════════════════
 //
 // 验证 SDK 在不同浏览器中都能正常工作
-// 注意：需要在 playwright.config.ts 中配置多个浏览器才会执行多次
+// 注意：需要在 config/playwright.config.ts 中配置多个浏览器才会执行多次
 //
 
 test.describe('跨浏览器兼容性', () => {

@@ -1,8 +1,10 @@
-# iframe RPC
+# iframe-link
 
-A small, Promise-based RPC and event channel between an iframe and its parent, built on `window.postMessage`.
+Simple communication between an iframe and its parent.
 
-English · [简体中文](README.zh-CN.md) · [日本語](README.ja.md)
+Promise-based remote calls and events, built on `window.postMessage`.
+
+English · [简体中文](docs/README.zh-CN.md) · [日本語](docs/README.ja.md)
 
 ## Why
 
@@ -10,16 +12,16 @@ English · [简体中文](README.zh-CN.md) · [日本語](README.ja.md)
 
 This SDK turns the parent and iframe into two ends of one small channel: expose methods, await remote calls, emit events, and handle load-order races with a READY/ACK handshake.
 
-![iframe RPC demo](docs/assets/sdk-demo.png)
+![iframe-link demo](docs/assets/sdk-demo.en.png)
 
 ## Install
 
-The npm package name is still being decided.
+Not yet published to npm. After publication, install with:
 
 ```bash
-pnpm add <package-name>
-# npm install <package-name>
-# yarn add <package-name>
+pnpm add iframe-link
+# npm install iframe-link
+# yarn add iframe-link
 ```
 
 ## Quick Start
@@ -27,7 +29,7 @@ pnpm add <package-name>
 ### Parent
 
 ```ts
-import { connectToIframe } from '<package-name>'
+import { connectToIframe } from 'iframe-link'
 
 type ChildApi = {
   getStatus(input: { userId: string }): Promise<{ online: boolean }>
@@ -50,7 +52,7 @@ await child.getStatus({ userId: '42' })
 ### Child
 
 ```ts
-import { connectToParent } from '<package-name>'
+import { connectToParent } from 'iframe-link'
 
 type ParentApi = {
   getTheme(): Promise<{ accent: string }>
@@ -88,11 +90,16 @@ Call `channel.destroy()` when the iframe is removed.
 ## Safety & Limits
 
 - Configure exact trusted Origins in production; do not configure a wildcard Origin.
-- The parent validates the configured Origin and iframe source. The child validates `allowedOrigins` but does not separately require `event.source === window.parent`; READY messages use `targetOrigin: '*'`.
+- The parent validates the configured Origin and iframe source. The child validates `allowedOrigins` and requires `event.source === window.parent`.
+- Before its parent Origin is confirmed, the child sends only READY messages, using `targetOrigin: '*'`. Await `channel.promise` before calling `emit()`; events emitted by the child before it is ready are ignored.
 - Message values must be JSON-serializable. Each RPC accepts one optional payload.
 - Timeout and cancellation are not built in. Without an ACK after five READY attempts, `promise` stays pending.
 - An SDK-less child can call methods exposed by an SDK parent, but it does not complete the SDK handshake.
 
+## Contributing
+
+See the [contributing guide](https://github.com/yuukiLike/iframe-channel/blob/main/docs/CONTRIBUTING.md) for local development and testing.
+
 ## License
 
-[MIT](LICENSE)
+[MIT](LICENSE) · [Third-party notices](docs/THIRD_PARTY_NOTICES.md)

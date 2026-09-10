@@ -12,11 +12,11 @@
 flowchart TD
     subgraph 命令层
         A[🚀 npm test]:::startNode
-        B[⚙️ vitest run]:::apiCall
+        B[⚙️ vitest run --config config/vitest.config.ts]:::apiCall
     end
 
     subgraph 配置层
-        C[📄 读取 vitest.config.ts]:::dataDisplay
+        C[📄 读取 config/vitest.config.ts]:::dataDisplay
         D[🌐 初始化 happy-dom 环境]:::apiCall
         E[📂 扫描 tests/unit/**/*.test.ts]:::dataDisplay
     end
@@ -114,8 +114,8 @@ flowchart TD
     end
 
     subgraph 服务启动阶段
-        E[🎭 playwright test]:::apiCall
-        F[📄 读取 playwright.config.ts]:::dataDisplay
+        E[🎭 playwright test --config config/playwright.config.ts]:::apiCall
+        F[📄 读取 config/playwright.config.ts]:::dataDisplay
         G[🌐 启动 Web Server]:::apiCall
         H[🖥️ serve . -l 3456]:::statusDisplay
     end
@@ -423,7 +423,7 @@ flowchart TD
     end
 
     subgraph 执行调试
-        F["vitest run -t 'testName'"]:::apiCall
+        F["vitest run --config config/vitest.config.ts -t 'testName'"]:::apiCall
         G["console.log(value)"]:::apiCall
         H["it.only('focus', ...)"]:::apiCall
         I[📊 查看输出]:::dataDisplay
@@ -468,8 +468,8 @@ flowchart TD
 
     subgraph 执行调试
         G["npm run test:e2e:ui"]:::apiCall
-        H["playwright test --headed"]:::apiCall
-        I["playwright test --debug"]:::apiCall
+        H["playwright test --config config/playwright.config.ts --headed"]:::apiCall
+        I["playwright test --config config/playwright.config.ts --debug"]:::apiCall
         J["await page.pause()"]:::apiCall
         K[📊 可视化回放]:::dataDisplay
         L[👀 观察浏览器]:::dataDisplay

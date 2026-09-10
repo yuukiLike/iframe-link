@@ -2,7 +2,7 @@
 
 本项目包含两种类型的测试：**单元测试**（Vitest）和 **E2E 测试**（Playwright）。
 
-> 📊 测试工作原理的详细流程图参见 [testing-workflow.md](./testing-workflow.md)
+> 📊 测试工作原理的详细流程图参见 [TESTING_WORKFLOW.md](TESTING_WORKFLOW.md)
 
 ## 目录结构
 
@@ -46,13 +46,13 @@ npm run test:coverage # 查看覆盖率
 ### 运行单个测试文件
 
 ```bash
-npx vitest run tests/unit/utils.test.ts
+npx vitest run --config config/vitest.config.ts tests/unit/utils.test.ts
 ```
 
 ### 运行匹配名称的测试
 
 ```bash
-npx vitest run -t "isTrustedOrigin"
+npx vitest run --config config/vitest.config.ts -t "isTrustedOrigin"
 ```
 
 ### 调试单元测试
@@ -96,13 +96,13 @@ npm run test:e2e:ui   # 可视化界面（强烈推荐）
 
 ```bash
 # 按文件
-npx playwright test tests/e2e/sdk-communication.spec.ts
+npx playwright test --config config/playwright.config.ts tests/e2e/sdk-communication.spec.ts
 
 # 按行号
-npx playwright test tests/e2e/sdk-communication.spec.ts:26
+npx playwright test --config config/playwright.config.ts tests/e2e/sdk-communication.spec.ts:26
 
 # 按名称
-npx playwright test --grep "handshake"
+npx playwright test --config config/playwright.config.ts --grep "handshake"
 ```
 
 ### 调试 E2E 测试
@@ -120,7 +120,7 @@ npm run test:e2e:ui
 **方法 2：使用 headed 模式**
 
 ```bash
-npx playwright test --headed
+npx playwright test --config config/playwright.config.ts --headed
 ```
 
 - 会打开真实浏览器窗口
@@ -129,7 +129,7 @@ npx playwright test --headed
 **方法 3：使用 debug 模式**
 
 ```bash
-npx playwright test --debug
+npx playwright test --config config/playwright.config.ts --debug
 ```
 
 - 打开 Playwright Inspector
@@ -150,7 +150,7 @@ test('my test', async ({ page }) => {
 
 **方法 5：查看失败截图和 trace**
 
-测试失败后，会在 `test-results/` 目录生成：
+测试失败后，会在 `docs/reports/test-results/` 目录生成：
 - 截图
 - trace 文件（可用 `npx playwright show-trace <trace.zip>` 查看）
 
@@ -286,8 +286,8 @@ npm run test:coverage
 
 | 文件 | 用途 |
 |------|------|
-| `vitest.config.ts` | 单元测试配置 |
-| `playwright.config.ts` | E2E 测试配置 |
+| `config/vitest.config.ts` | 单元测试配置 |
+| `config/playwright.config.ts` | E2E 测试配置 |
 
 ---
 

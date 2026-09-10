@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="zh-CN">
+<html lang="en">
 
 <head>
   <meta charset="UTF-8" />
-  <title>iframe-rpc-kit 演示</title>
+  <title data-i18n="demoTitle">iframe-link demo</title>
   <style>
     * {
       box-sizing: border-box;
@@ -219,32 +219,34 @@
 
 <body>
   <header>
-    <h1>iframe-rpc-kit</h1>
+    <h1>iframe-link</h1>
 
     <div class="mode-tabs">
       <button
         class="mode-tab active"
         data-mode="sdk"
-      >SDK 模式</button>
+        data-i18n="sdkMode"
+      >SDK mode</button>
       <button
         class="mode-tab"
         data-mode="native"
-      >原生模式</button>
+        data-i18n="nativeMode"
+      >Native mode</button>
     </div>
 
     <div class="uid-tabs">
       <button
         class="uid-tab active"
         data-uid="1001"
-      >用户 1001</button>
+      >User 1001</button>
       <button
         class="uid-tab"
         data-uid="1002"
-      >用户 1002</button>
+      >User 1002</button>
       <button
         class="uid-tab"
         data-uid="1003"
-      >用户 1003</button>
+      >User 1003</button>
     </div>
 
     <div class="status-area">
@@ -266,13 +268,13 @@
           class="status-dot"
           id="native-dot"
         ></div>
-        <span>原生</span>
+        <span data-i18n="native">Native</span>
       </div>
     </div>
   </header>
 
   <div class="controls-row">
-    <label>设置子应用背景色:</label>
+    <label data-i18n="iframeBackground">Iframe background:</label>
     <input
       type="color"
       id="color-picker"
@@ -299,7 +301,7 @@
     >
       <iframe
         id="sdk-iframe"
-        src="/examples/child-sdk.html"
+        data-src="/examples/child-sdk.html"
       ></iframe>
     </div>
     <div
@@ -308,12 +310,25 @@
     >
       <iframe
         id="native-iframe"
-        src="/examples/child-native.html"
+        data-src="/examples/child-native.html"
       ></iframe>
     </div>
   </main>
 
   <script type="module">
+    import { copy, lang, localize } from "/examples/locale.js";
+
+    localize();
+    document.querySelectorAll(".uid-tab").forEach((tab) => {
+      tab.textContent = `${copy.user} ${tab.dataset.uid}`;
+    });
+    document.querySelectorAll("iframe[data-src]").forEach((iframe) => {
+      iframe.src = `${iframe.dataset.src}?lang=${lang}`;
+    });
+  </script>
+
+  <script type="module">
+    import { copy } from "/examples/locale.js";
     import { connectToIframe } from "/dist/index.js";
 
     const ORIGIN = window.location.origin;
@@ -386,11 +401,11 @@
       debug: true,
       methods: {
         showMessage: ({ from, message }) => {
-          showToast(`来自 ${from}`, message, "sdk");
+          showToast(copy.from(from), message, "sdk");
           return { success: true };
         },
         updateStatus: ({ status, emoji }) => {
-          showToast("状态更新", `${emoji} ${status}`, "sdk");
+          showToast(copy.statusUpdated, `${emoji} ${status}`, "sdk");
           return { success: true };
         },
         setBackground: (color) => {
@@ -416,11 +431,11 @@
       if (!msg || typeof msg !== "object") return;
 
       if (msg.action === "showMessage") {
-        showToast(`来自 ${msg.data.from}`, msg.data.message, "native");
+        showToast(copy.from(msg.data.from), msg.data.message, "native");
       }
       if (msg.action === "updateStatus") {
         showToast(
-          "状态更新",
+          copy.statusUpdated,
           `${msg.data.emoji} ${msg.data.status}`,
           "native"
         );
@@ -430,13 +445,21 @@
       }
     });
 
-    nativeIframe.onload = () => {
+    function initializeNativeIframe() {
       document.getElementById("native-dot").classList.add("connected");
       nativeIframe.contentWindow.postMessage(
         { action: "setUid", data: currentUid },
         "*"
       );
-    };
+    }
+
+    nativeIframe.addEventListener("load", initializeNativeIframe);
+    if (
+      nativeIframe.contentDocument?.readyState === "complete" &&
+      nativeIframe.contentDocument.URL !== "about:blank"
+    ) {
+      initializeNativeIframe();
+    }
 
     window.testAPI = { showToast };
   </script>

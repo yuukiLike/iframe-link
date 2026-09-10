@@ -56,10 +56,10 @@
  *   npm run test:e2e:ui       # 打开可视化界面，可以看到测试执行过程（推荐新手使用！）
  *
  *   # 更多调试命令：
- *   npx playwright test --headed              # 显示浏览器窗口
- *   npx playwright test --headed --slowmo=500 # 慢速执行，便于观察
- *   npx playwright test --grep "handshake"    # 只运行名称包含 "handshake" 的测试
- *   npx playwright show-report                # 查看测试报告
+ *   npx playwright test --config config/playwright.config.ts --headed              # 显示浏览器窗口
+ *   npx playwright test --config config/playwright.config.ts --debug               # 打开调试器，逐步执行
+ *   npx playwright test --config config/playwright.config.ts --grep "handshake"    # 只运行名称包含 "handshake" 的测试
+ *   npx playwright show-report docs/reports/playwright # 查看测试报告
  *
  * ═══════════════════════════════════════════════════════════════════════════════
  * ❓ 为什么用 serve 而不是 Vite？
@@ -84,7 +84,7 @@ export default defineConfig({
 
   // 测试文件所在目录
   // Playwright 会自动查找这个目录下的 *.spec.ts 文件
-  testDir: './tests/e2e',
+  testDir: '../tests/e2e',
 
   // 是否并行执行测试
   // true = 多个测试文件同时运行，加快速度
@@ -115,10 +115,10 @@ export default defineConfig({
 
   // 生成 HTML 格式的测试报告
   // 测试完成后运行 `npx playwright show-report docs/reports/playwright` 查看
-  reporter: [['html', { outputFolder: 'docs/reports/playwright' }]],
+  reporter: [['html', { outputFolder: '../docs/reports/playwright' }]],
 
   // 测试结果目录（存放失败时的截图、视频等）
-  outputDir: 'docs/reports/test-results',
+  outputDir: '../docs/reports/test-results',
 
   // ═══════════════════════════════════════════════════════════════════════════
   // 全局测试配置（所有测试共享）
@@ -162,6 +162,7 @@ export default defineConfig({
     // -l 3456: 监听 3456 端口
     // --cors: 允许跨域请求（iframe 通信需要）
     command: 'npx serve . -l 3456 --cors',
+    cwd: '..',
 
     // Playwright 会等待这个 URL 可访问后才开始测试
     url: 'http://localhost:3456',

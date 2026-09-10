@@ -71,16 +71,15 @@ function createParentMessenger(iframe: HTMLIFrameElement, childOrigin: string) {
   const send = (message: Message) => {
     log.bridge('[Parent] 发送: %O -> %s', message, childOrigin)
 
-    if (destroyed || !iframe?.contentWindow) {
-      log.bridge('[Parent] 发送失败: destroyed=%s, hasWindow=%s', destroyed, !!iframe?.contentWindow)
-      return
-    }
+    if (destroyed) return
+    if (!iframe.contentWindow) throw new Error('Iframe not available')
 
     try {
       iframe.contentWindow.postMessage(cleanMessage(message), childOrigin)
       log.bridge('[Parent] ✓ 已发送: %s', message.type)
     } catch (e) {
       log.bridge('[Parent] ✗ 发送异常: %O', e)
+      throw e
     }
   }
 
@@ -123,6 +122,11 @@ function createChildMessenger(allowedOrigins: OriginPattern[]) {
       return
     }
 
+    if (event.source !== window.parent) {
+      log.bridge('[Child] source 不是父窗口')
+      return
+    }
+
     const trusted = isTrustedOrigin(event.origin, allowedOrigins)
     if (!trusted) {
       log.bridge('[Child] origin 不可信: %s', event.origin)
@@ -144,8 +148,9 @@ function createChildMessenger(allowedOrigins: OriginPattern[]) {
   }
 
   const send = (message: Message) => {
-    // READY 消息发送给所有源（因为还不知道父窗口的 origin）
-    const targetOrigin = message.type === 'READY' ? '*' : (parentOrigin || '*')
+    // 父源未知时仅发送握手消息，业务消息不能使用通配目标。
+    if (message.type !== 'READY' && !parentOrigin) return
+    const targetOrigin = message.type === 'READY' ? '*' : parentOrigin!
 
     log.bridge('[Child] 发送: %O -> %s', message, targetOrigin)
 
@@ -159,6 +164,7 @@ function createChildMessenger(allowedOrigins: OriginPattern[]) {
       log.bridge('[Child] ✓ 已发送: %s', message.type)
     } catch (e) {
       log.bridge('[Child] ✗ 发送异常: %O', e)
+      throw e
     }
   }
 

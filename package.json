@@ -1,7 +1,7 @@
 {
-  "name": "iframe-rpc-kit",
+  "name": "iframe-link",
   "version": "1.0.0",
-  "description": "Promise-based, bidirectional iframe RPC and events over postMessage, with handshake retries and origin checks.",
+  "description": "Simple communication between an iframe and its parent. Promise-based calls and events over postMessage.",
   "keywords": [
     "iframe",
     "iframe-rpc",
@@ -42,29 +42,26 @@
   },
   "files": [
     "dist",
-    "README.zh-CN.md",
-    "README.ja.md",
-    "THIRD_PARTY_NOTICES.md",
+    "docs/README.zh-CN.md",
+    "docs/README.ja.md",
+    "docs/THIRD_PARTY_NOTICES.md",
     "docs/assets"
   ],
   "publishConfig": {
     "access": "public"
   },
   "scripts": {
-    "dev": "concurrently \"tsup --watch\" \"npx live-server --port=3000 --open=/examples/index.html --wait=1000\"",
-    "build": "tsup",
+    "dev": "concurrently \"tsup --config config/tsup.config.ts --watch\" \"npx live-server --port=3000 --open=/examples/index.html --wait=1000\"",
+    "build": "tsup --config config/tsup.config.ts",
     "demo": "npm run build && npx live-server --port=3000 --open=/examples/index.html",
     "prepack": "npm run build",
     "prepublishOnly": "npm run test:all",
-    "test": "vitest run",
-    "test:watch": "vitest",
-    "test:coverage": "vitest run --coverage",
-    "test:e2e": "npm run build && playwright test",
-    "test:e2e:ui": "playwright test --ui",
+    "test": "vitest run --config config/vitest.config.ts",
+    "test:watch": "vitest --config config/vitest.config.ts",
+    "test:coverage": "vitest run --config config/vitest.config.ts --coverage",
+    "test:e2e": "npm run build && playwright test --config config/playwright.config.ts",
+    "test:e2e:ui": "playwright test --config config/playwright.config.ts --ui",
     "test:all": "npm run test && npm run test:e2e"
-  },
-  "dependencies": {
-    "debug": "^4.4.3"
   },
   "devDependencies": {
     "@playwright/test": "^1.40.0",
@@ -72,6 +69,7 @@
     "@types/node": "^25.0.6",
     "@vitest/coverage-v8": "^1.0.0",
     "concurrently": "^9.2.1",
+    "debug": "^4.4.3",
     "happy-dom": "^12.0.0",
     "live-server": "^1.2.2",
     "serve": "^14.0.0",

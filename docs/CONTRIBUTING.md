@@ -14,10 +14,12 @@ npm run dev
 ```
 
 `npm run dev` 会同时启动：
-- `tsup --watch` - 监听 src 变化自动构建
+- `tsup --config config/tsup.config.ts --watch` - 监听 src 变化自动构建
 - `live-server` - 打开示例页面，构建完成后自动刷新浏览器
 
 修改源码后无需手动重新构建。
+
+演示页面默认使用英文。中文和日文分别访问 `http://127.0.0.1:3000/examples/index.html?lang=zh-CN` 和 `http://127.0.0.1:3000/examples/index.html?lang=ja`。
 
 ## 项目结构
 
@@ -34,6 +36,7 @@ tests/
 └── e2e/              # E2E 测试（Playwright）
     └── fixtures/     # 测试用 HTML 页面
 
+config/               # 构建、单元测试与 E2E 配置
 examples/             # 演示页面
 docs/                 # 文档
 ```
@@ -46,7 +49,7 @@ npm run test:e2e      # E2E 测试
 npm run test:all      # 全部测试
 ```
 
-详细调试方法参见 [docs/TESTING_GUIDE.md](./docs/TESTING_GUIDE.md)
+详细调试方法参见 [测试指南](TESTING_GUIDE.md)
 
 ## 代码规范
 

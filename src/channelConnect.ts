@@ -118,7 +118,7 @@ function createChannel<T = any>(options: {
       type: "__NATIVE_RESPONSE__",
       action,
       requestId,
-      success: !error,
+      success: error === undefined,
       result,
       error,
     };
@@ -132,7 +132,9 @@ function createChannel<T = any>(options: {
     if (isSDKMessage(message)) {
       handleSDKMessage(message);
     } else if (isNativeMessage(message)) {
-      handleNativeMessage(message);
+      handleNativeMessage(message).catch(error => {
+        log.channel('[%s] Native 响应发送失败: %O', role, error);
+      });
     } else {
       log.channel('[%s] 未知消息类型，忽略', role);
     }
@@ -162,7 +164,9 @@ function createChannel<T = any>(options: {
         break;
       case "CALL":
         log.channel('[%s] RPC 调用: %s', role, message.method);
-        rpc.execute(message.id!, message.method!, message.params);
+        rpc.execute(message.id!, message.method!, message.params).catch(error => {
+          log.channel('[%s] RPC 响应发送失败: %O', role, error);
+        });
         break;
       case "RESULT":
         log.channel('[%s] RPC 结果: id=%s', role, message.id);

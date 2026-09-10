@@ -36,6 +36,18 @@ describe("isTrustedOrigin", () => {
     ).toBe(true);
   });
 
+  it.each(["g", "y"])("%s 正则校验忽略并保留调用方的 lastIndex", (flag) => {
+    const pattern = new RegExp("^https://example\\.com$", flag);
+    pattern.lastIndex = 5;
+
+    for (let attempt = 0; attempt < 3; attempt++) {
+      expect(isTrustedOrigin("https://example.com", [pattern])).toBe(true);
+      expect(pattern.lastIndex).toBe(5);
+      expect(isTrustedOrigin("https://evil.com", [pattern])).toBe(false);
+      expect(pattern.lastIndex).toBe(5);
+    }
+  });
+
   it("空白名单时返回 false", () => {
     expect(isTrustedOrigin("https://example.com", [])).toBe(false);
   });
@@ -96,6 +108,35 @@ describe("createRPC", () => {
     await expect(callPromise).rejects.toThrow("Something went wrong");
   });
 
+  it("远程方法返回空错误信息时也应 reject", async () => {
+    const messenger = createMockMessenger();
+    const rpc = createRPC(messenger, {});
+    const callPromise = rpc.call("failingMethod");
+    const sentMessage = messenger.send.mock.calls[0][0];
+
+    rpc.resolve(sentMessage.id, undefined, "");
+
+    await expect(callPromise).rejects.toEqual(new Error(""));
+  });
+
+  it("发送失败时立即拒绝调用并移除待处理记录", async () => {
+    const messenger = createMockMessenger();
+    const sendError = new TypeError("Cannot serialize parameters");
+    messenger.send.mockImplementationOnce(() => {
+      throw sendError;
+    });
+    const rpc = createRPC(messenger, {});
+
+    await expect(rpc.call("remoteMethod")).rejects.toBe(sendError);
+    // 发送失败后不会再收到响应，保留记录会使每次失败都泄漏内存。
+    expect((rpc as unknown as { pending: Map<string, unknown> }).pending.size).toBe(0);
+
+    const retry = rpc.call("remoteMethod");
+    const sentMessage = messenger.send.mock.calls[1][0];
+    rpc.resolve(sentMessage.id, "ok");
+    await expect(retry).resolves.toBe("ok");
+  });
+
   it("执行本地方法", async () => {
     const messenger = createMockMessenger();
     const localMethod = vi.fn().mockResolvedValue({ data: "ok" });
@@ -149,6 +190,18 @@ describe("createRPC", () => {
 
     await expect(promise1).rejects.toThrow("Destroyed");
     await expect(promise2).rejects.toThrow("Destroyed");
+  });
+
+  it("销毁后的远程调用立即拒绝且不发送消息", async () => {
+    const messenger = createMockMessenger();
+    messenger.send.mockImplementation(() => {
+      throw new Error("Unexpected send after cleanup");
+    });
+    const rpc = createRPC(messenger, {});
+    rpc.cleanup();
+
+    await expect(rpc.call("remoteMethod")).rejects.toThrow("Destroyed");
+    expect(messenger.send).not.toHaveBeenCalled();
   });
 });
 
