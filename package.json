@@ -57,7 +57,7 @@
     "build": "tsup --config config/tsup.config.ts",
     "demo": "pnpm run build && live-server --port=3000 --open=/examples/index.html",
     "prepack": "pnpm run build",
-    "prepublishOnly": "pnpm run test:all",
+    "prepublishOnly": "pnpm install --frozen-lockfile && pnpm run test:all",
     "test": "vitest run --config config/vitest.config.ts",
     "test:watch": "vitest --config config/vitest.config.ts",
     "test:coverage": "vitest run --config config/vitest.config.ts --coverage",
