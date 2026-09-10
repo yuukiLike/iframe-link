@@ -1,19 +1,38 @@
 # 贡献指南
 
+## Heuristics · 启发式
+
+**heuristic** /ˌhjʊ(ə)ˈrɪstɪk/
+
+A technique designed for solving a problem more quickly when classic methods are too slow, or for finding an approximate solution when classic methods fail to find any exact solution.
+
+一种技术，旨在当经典方法过慢时更快地解决问题，或在经典方法无法找到任何精确解时找到近似解。
+
+| English | 中文 |
+|---------|------|
+| Priority is the best User Experience | 优先考虑最佳用户体验 |
+| Complexity should be introduced when it’s inevitable | 当复杂性不可避免时，才应引入复杂性 |
+| Code should be easy to reason about | 代码应该易于理解 |
+| Code should be easy to delete | 代码应该易于删除 |
+| Avoid abstracting too early | 避免过早抽象 |
+| Avoid thinking too far in the future | 避免考虑过于长远的未来 |
+
 ## 开发环境
+
+本项目使用 pnpm，版本由 `package.json` 的 `packageManager` 字段指定。依赖版本统一记录在 `pnpm-lock.yaml` 中。
 
 ```bash
 # 安装依赖
-npm install
+pnpm install
 
 # 安装 Playwright 浏览器（首次）
-npx playwright install chromium
+pnpm exec playwright install chromium
 
 # 启动开发模式（自动构建 + 预览）
-npm run dev
+pnpm run dev
 ```
 
-`npm run dev` 会同时启动：
+`pnpm run dev` 会同时启动：
 - `tsup --config config/tsup.config.ts --watch` - 监听 src 变化自动构建
 - `live-server` - 打开示例页面，构建完成后自动刷新浏览器
 
@@ -44,12 +63,23 @@ docs/                 # 文档
 ## 测试
 
 ```bash
-npm test              # 单元测试
-npm run test:e2e      # E2E 测试
-npm run test:all      # 全部测试
+pnpm test              # 单元测试
+pnpm run test:e2e      # E2E 测试
+pnpm run test:all      # 全部测试
 ```
 
 详细调试方法参见 [测试指南](TESTING_GUIDE.md)
+
+## 发布
+
+包名为 `iframe-link`，`package.json` 中的 `publishConfig` 将发布目标固定为 npm 官方源，并将包设为公开。
+
+```bash
+pnpm whoami              # 确认 npm 发布账号
+pnpm publish             # 发布当前 package.json 中的版本
+```
+
+发布前先检查并提交代码、版本和文档改动。pnpm 默认检查发布分支、工作区和远端同步状态；发布命令会自动运行全部测试并构建发布产物。
 
 ## 代码规范
 

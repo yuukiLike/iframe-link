@@ -16,8 +16,6 @@ This SDK turns the parent and iframe into two ends of one small channel: expose 
 
 ## Install
 
-Not yet published to npm. After publication, install with:
-
 ```bash
 pnpm add iframe-link
 # npm install iframe-link
@@ -98,7 +96,7 @@ Call `channel.destroy()` when the iframe is removed.
 
 ## Contributing
 
-See the [contributing guide](https://github.com/yuukiLike/iframe-channel/blob/main/docs/CONTRIBUTING.md) for local development and testing.
+See the [contributing guide](https://github.com/yuukiLike/iframe-link/blob/main/docs/CONTRIBUTING.md) for local development and testing.
 
 ## License
 

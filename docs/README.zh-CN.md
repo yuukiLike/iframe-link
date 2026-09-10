@@ -16,8 +16,6 @@
 
 ## 安装
 
-尚未发布到 npm。发布后可使用以下命令安装：
-
 ```bash
 pnpm add iframe-link
 # npm install iframe-link
@@ -98,7 +96,7 @@ channel.emit('STATUS_CHANGED', { online: true })
 
 ## 贡献
 
-本地开发与测试请参阅[贡献指南](https://github.com/yuukiLike/iframe-channel/blob/main/docs/CONTRIBUTING.md)。
+本地开发与测试请参阅[贡献指南](https://github.com/yuukiLike/iframe-link/blob/main/docs/CONTRIBUTING.md)。
 
 ## 许可证
 
