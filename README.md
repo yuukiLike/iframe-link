@@ -2,7 +2,7 @@
 
 Simple communication between an iframe and its parent.
 
-Promise-based remote calls and events, built on `window.postMessage`.
+A browser library for JavaScript and TypeScript with Promise-based, bidirectional remote procedure calls (RPC) and event messaging over `window.postMessage`.
 
 English · [简体中文](docs/README.zh-CN.md) · [日本語](docs/README.ja.md)
 
@@ -15,6 +15,8 @@ This SDK turns the parent and iframe into two ends of one small channel: expose 
 ![iframe-link demo](docs/assets/sdk-demo.en.png)
 
 ## Install
+
+Install [`iframe-link`](https://www.npmjs.com/package/iframe-link) from npm:
 
 ```bash
 pnpm add iframe-link

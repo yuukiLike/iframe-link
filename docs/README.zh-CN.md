@@ -2,7 +2,7 @@
 
 让 iframe 与父页面之间的通信更简单。
 
-基于 `window.postMessage`，提供 Promise 远程调用与事件通信。
+面向 JavaScript 和 TypeScript 的浏览器通信库，基于 `window.postMessage`，提供 Promise 双向远程过程调用（RPC）与事件通信。
 
 [English](../README.md) · 简体中文 · [日本語](README.ja.md)
 
@@ -15,6 +15,8 @@
 ![iframe-link 演示](assets/sdk-demo.zh-CN.png)
 
 ## 安装
+
+从 npm 安装 [`iframe-link`](https://www.npmjs.com/package/iframe-link)：
 
 ```bash
 pnpm add iframe-link
