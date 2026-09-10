@@ -2,7 +2,7 @@
 
 iframe と親ページの通信をシンプルに。
 
-`window.postMessage` を使い、Promise ベースのリモート呼び出しとイベント通信を提供します。
+JavaScript と TypeScript 向けのブラウザー通信ライブラリです。`window.postMessage` を使い、Promise ベースの双方向 RPC（リモートプロシージャコール）とイベント通信を提供します。
 
 [English](../README.md) · [简体中文](README.zh-CN.md) · 日本語
 
@@ -15,6 +15,8 @@ iframe と親ページの通信をシンプルに。
 ![iframe-link デモ](assets/sdk-demo.ja.png)
 
 ## インストール
+
+npm の [`iframe-link`](https://www.npmjs.com/package/iframe-link) をインストールします。
 
 ```bash
 pnpm add iframe-link
