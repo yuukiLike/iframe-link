@@ -2,7 +2,7 @@
 
 iframe と親ページの通信をシンプルに。
 
-JavaScript と TypeScript 向けのブラウザー通信ライブラリです。`window.postMessage` を使い、Promise ベースの双方向 RPC（リモートプロシージャコール）とイベント通信を提供します。
+JavaScript と TypeScript 向けのミニマルなブラウザー通信ライブラリです。`window.postMessage` を使い、Promise ベースの双方向 RPC（リモートプロシージャコール）とイベント通信を提供します。
 
 [English](../README.md) · [简体中文](README.zh-CN.md) · 日本語
 
@@ -11,6 +11,8 @@ JavaScript と TypeScript 向けのブラウザー通信ライブラリです。
 `postMessage` はメッセージを送るだけで、リクエスト ID、Promise による応答、イベントの振り分け、相手側の準備完了を確実に確認する仕組みまでは提供しません。iframe ごとに同じ仕組みを作り直すのは手間がかかり、Origin 検証も見落としやすくなります。
 
 この SDK は親ページと iframe を小さな双方向チャネルでつなぎます。メソッドの公開、リモート呼び出し、イベント送信に加え、READY/ACK ハンドシェイクで読み込み順の違いにも対応します。
+
+設計の目標は、iframe 通信に集中した小さな API を保ち、明確な必要性がある場合にのみ抽象化や互換レイヤーを導入することです。
 
 ![iframe-link デモ](assets/sdk-demo.ja.png)
 

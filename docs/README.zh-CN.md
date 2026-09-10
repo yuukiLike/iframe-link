@@ -2,7 +2,7 @@
 
 让 iframe 与父页面之间的通信更简单。
 
-面向 JavaScript 和 TypeScript 的浏览器通信库，基于 `window.postMessage`，提供 Promise 双向远程过程调用（RPC）与事件通信。
+面向 JavaScript 和 TypeScript 的极简浏览器通信库，基于 `window.postMessage`，提供 Promise 双向远程过程调用（RPC）与事件通信。
 
 [English](../README.md) · 简体中文 · [日本語](README.ja.md)
 
@@ -11,6 +11,8 @@
 `postMessage` 只负责传递消息，并不会处理请求标识、Promise 响应、事件分发，也无法可靠确认另一端何时就绪。每个 iframe 都重复实现这些逻辑既繁琐，也容易遗漏 Origin 校验。
 
 这个 SDK 将父页面与 iframe 连接成一个轻量的双向通道：暴露方法、等待远程调用、发送事件，并通过 READY/ACK 握手处理加载顺序差异。
+
+设计目标是保持 API 精简、专注于 iframe 通信，只在明确需求出现时引入抽象或兼容层。
 
 ![iframe-link 演示](assets/sdk-demo.zh-CN.png)
 

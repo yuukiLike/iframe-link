@@ -2,7 +2,7 @@
 
 Simple communication between an iframe and its parent.
 
-A browser library for JavaScript and TypeScript with Promise-based, bidirectional remote procedure calls (RPC) and event messaging over `window.postMessage`.
+A minimalist browser library for JavaScript and TypeScript with Promise-based, bidirectional remote procedure calls (RPC) and event messaging over `window.postMessage`.
 
 English · [简体中文](docs/README.zh-CN.md) · [日本語](docs/README.ja.md)
 
@@ -11,6 +11,8 @@ English · [简体中文](docs/README.zh-CN.md) · [日本語](docs/README.ja.md
 `postMessage` moves messages, but it does not provide request IDs, Promise resolution, event routing, or a reliable way to know when the other side is ready. Rebuilding that layer for every iframe is repetitive, and Origin checks are easy to miss.
 
 This SDK turns the parent and iframe into two ends of one small channel: expose methods, await remote calls, emit events, and handle load-order races with a READY/ACK handshake.
+
+The design goal is a small API focused on iframe communication, with abstractions and compatibility layers added only for concrete needs.
 
 ![iframe-link demo](docs/assets/sdk-demo.en.png)
 
