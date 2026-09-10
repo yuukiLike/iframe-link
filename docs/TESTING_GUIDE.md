@@ -22,13 +22,13 @@ tests/
 
 ```bash
 # 运行所有测试
-npm run test:all
+pnpm run test:all
 
 # 只运行单元测试
-npm test
+pnpm test
 
 # 只运行 E2E 测试
-npm run test:e2e
+pnpm run test:e2e
 ```
 
 ---
@@ -38,21 +38,21 @@ npm run test:e2e
 ### 运行命令
 
 ```bash
-npm test              # 运行一次
-npm run test:watch    # 监听模式（文件变化自动重跑）
-npm run test:coverage # 查看覆盖率
+pnpm test              # 运行一次
+pnpm run test:watch    # 监听模式（文件变化自动重跑）
+pnpm run test:coverage # 查看覆盖率
 ```
 
 ### 运行单个测试文件
 
 ```bash
-npx vitest run --config config/vitest.config.ts tests/unit/utils.test.ts
+pnpm exec vitest run --config config/vitest.config.ts tests/unit/utils.test.ts
 ```
 
 ### 运行匹配名称的测试
 
 ```bash
-npx vitest run --config config/vitest.config.ts -t "isTrustedOrigin"
+pnpm exec vitest run --config config/vitest.config.ts -t "isTrustedOrigin"
 ```
 
 ### 调试单元测试
@@ -71,7 +71,7 @@ it('should work', () => {
 
 1. 在测试代码中设置断点
 2. 打开 VS Code 的 JavaScript Debug Terminal
-3. 运行 `npm test`
+3. 运行 `pnpm test`
 
 **方法 3：只运行单个测试**
 
@@ -88,21 +88,21 @@ it.only('focus on this test', () => {
 ### 运行命令
 
 ```bash
-npm run test:e2e      # 无头模式（后台运行）
-npm run test:e2e:ui   # 可视化界面（强烈推荐）
+pnpm run test:e2e      # 无头模式（后台运行）
+pnpm run test:e2e:ui   # 可视化界面（强烈推荐）
 ```
 
 ### 运行单个测试
 
 ```bash
 # 按文件
-npx playwright test --config config/playwright.config.ts tests/e2e/sdk-communication.spec.ts
+pnpm exec playwright test --config config/playwright.config.ts tests/e2e/sdk-communication.spec.ts
 
 # 按行号
-npx playwright test --config config/playwright.config.ts tests/e2e/sdk-communication.spec.ts:26
+pnpm exec playwright test --config config/playwright.config.ts tests/e2e/sdk-communication.spec.ts:26
 
 # 按名称
-npx playwright test --config config/playwright.config.ts --grep "handshake"
+pnpm exec playwright test --config config/playwright.config.ts --grep "handshake"
 ```
 
 ### 调试 E2E 测试
@@ -110,7 +110,7 @@ npx playwright test --config config/playwright.config.ts --grep "handshake"
 **方法 1：使用 UI 模式（推荐新手）**
 
 ```bash
-npm run test:e2e:ui
+pnpm run test:e2e:ui
 ```
 
 - 可视化界面，可以看到每一步操作
@@ -120,7 +120,7 @@ npm run test:e2e:ui
 **方法 2：使用 headed 模式**
 
 ```bash
-npx playwright test --config config/playwright.config.ts --headed
+pnpm exec playwright test --config config/playwright.config.ts --headed
 ```
 
 - 会打开真实浏览器窗口
@@ -129,7 +129,7 @@ npx playwright test --config config/playwright.config.ts --headed
 **方法 3：使用 debug 模式**
 
 ```bash
-npx playwright test --config config/playwright.config.ts --debug
+pnpm exec playwright test --config config/playwright.config.ts --debug
 ```
 
 - 打开 Playwright Inspector
@@ -152,7 +152,7 @@ test('my test', async ({ page }) => {
 
 测试失败后，会在 `docs/reports/test-results/` 目录生成：
 - 截图
-- trace 文件（可用 `npx playwright show-trace <trace.zip>` 查看）
+- trace 文件（可用 `pnpm exec playwright show-trace <trace.zip>` 查看）
 
 ---
 
@@ -275,7 +275,7 @@ await page.waitForResponse(resp => resp.url().includes('/api/'))
 ### Q: 如何查看测试覆盖率
 
 ```bash
-npm run test:coverage
+pnpm run test:coverage
 ```
 
 报告会生成在 `coverage/` 目录，用浏览器打开 `coverage/index.html` 查看。

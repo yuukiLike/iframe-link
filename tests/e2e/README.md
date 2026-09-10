@@ -31,17 +31,17 @@ E2E 测试模拟真实用户，在真实浏览器中验证这些。
 
 ```bash
 # 1. 安装 Playwright 浏览器（只需运行一次）
-npx playwright install chromium
+pnpm exec playwright install chromium
 
 # 2. 运行所有 E2E 测试
-npm run test:e2e
+pnpm run test:e2e
 ```
 
 ### 推荐的开发方式
 
 ```bash
 # 打开可视化界面（强烈推荐新手使用！）
-npm run test:e2e:ui
+pnpm run test:e2e:ui
 ```
 
 这会打开一个界面，你可以：
@@ -150,25 +150,25 @@ await iframe.locator('#button').click()
 
 ```bash
 # 运行所有测试（无头模式，看不到浏览器）
-npm run test:e2e
+pnpm run test:e2e
 
 # 打开可视化界面（推荐！）
-npm run test:e2e:ui
+pnpm run test:e2e:ui
 
 # 显示浏览器窗口
-npx playwright test --config config/playwright.config.ts --headed
+pnpm exec playwright test --config config/playwright.config.ts --headed
 
 # 逐步执行，便于观察
-npx playwright test --config config/playwright.config.ts --debug
+pnpm exec playwright test --config config/playwright.config.ts --debug
 
 # 只运行包含 "handshake" 的测试
-npx playwright test --config config/playwright.config.ts --grep "handshake"
+pnpm exec playwright test --config config/playwright.config.ts --grep "handshake"
 
 # 只运行某个文件
-npx playwright test --config config/playwright.config.ts tests/e2e/sdk-communication.spec.ts
+pnpm exec playwright test --config config/playwright.config.ts tests/e2e/sdk-communication.spec.ts
 
 # 查看测试报告
-npx playwright show-report docs/reports/playwright
+pnpm exec playwright show-report docs/reports/playwright
 ```
 
 ---
@@ -178,7 +178,7 @@ npx playwright show-report docs/reports/playwright
 ### 1. 使用 UI 模式
 
 ```bash
-npm run test:e2e:ui
+pnpm run test:e2e:ui
 ```
 
 最直观的调试方式，可以看到每一步的截图。
@@ -187,7 +187,7 @@ npm run test:e2e:ui
 
 ```bash
 # 启动本地服务器
-npx serve . -l 3456 --cors
+pnpm exec serve . -l 3456 --cors
 
 # 在浏览器打开
 open http://localhost:3456/tests/e2e/fixtures/parent.html
@@ -285,7 +285,7 @@ const data = await page.evaluate(async () => {
 
 ```bash
 # 查看 HTML 报告
-npx playwright show-report docs/reports/playwright
+pnpm exec playwright show-report docs/reports/playwright
 
 # 报告中包含：
 # - 失败的截图
@@ -331,10 +331,10 @@ test.describe('自动重连', () => {
 
 ```bash
 # 只运行新写的测试
-npx playwright test --config config/playwright.config.ts --grep "自动重连"
+pnpm exec playwright test --config config/playwright.config.ts --grep "自动重连"
 
 # 或使用 UI 模式
-npm run test:e2e:ui
+pnpm run test:e2e:ui
 ```
 
 ---

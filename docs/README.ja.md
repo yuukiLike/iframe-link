@@ -16,8 +16,6 @@ iframe と親ページの通信をシンプルに。
 
 ## インストール
 
-npm にはまだ公開していません。公開後は、次のコマンドでインストールできます。
-
 ```bash
 pnpm add iframe-link
 # npm install iframe-link
@@ -98,7 +96,7 @@ iframe を削除するときは `channel.destroy()` を呼び出してくださ�
 
 ## コントリビューション
 
-ローカル開発とテストについては、[貢献ガイド](https://github.com/yuukiLike/iframe-channel/blob/main/docs/CONTRIBUTING.md)を参照してください。
+ローカル開発とテストについては、[貢献ガイド](https://github.com/yuukiLike/iframe-link/blob/main/docs/CONTRIBUTING.md)を参照してください。
 
 ## ライセンス
 

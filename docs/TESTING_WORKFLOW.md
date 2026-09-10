@@ -11,7 +11,7 @@
 ```mermaid
 flowchart TD
     subgraph 命令层
-        A[🚀 npm test]:::startNode
+        A[🚀 pnpm test]:::startNode
         B[⚙️ vitest run --config config/vitest.config.ts]:::apiCall
     end
 
@@ -66,7 +66,7 @@ sequenceDiagram
     participant S as 源码模块
 
     %% 初始化阶段
-    CLI->>V: 执行 npm test [🟢用户操作]
+    CLI->>V: 执行 pnpm test [🟢用户操作]
     V->>V: 读取配置文件 [🔸配置加载]
     Note over V,H: 环境 happy-dom 路径 tests/unit/*.test.ts
     V->>H: 初始化虚拟 DOM [🔸接口调用]
@@ -107,8 +107,8 @@ sequenceDiagram
 ```mermaid
 flowchart TD
     subgraph 构建阶段
-        A[🚀 npm run test:e2e]:::startNode
-        B[🔨 npm run build]:::apiCall
+        A[🚀 pnpm run test:e2e]:::startNode
+        B[🔨 pnpm run build]:::apiCall
         C[⚙️ tsup 编译 TypeScript]:::apiCall
         D[📦 生成 dist/index.js]:::dataDisplay
     end
@@ -467,7 +467,7 @@ flowchart TD
     end
 
     subgraph 执行调试
-        G["npm run test:e2e:ui"]:::apiCall
+        G["pnpm run test:e2e:ui"]:::apiCall
         H["playwright test --config config/playwright.config.ts --headed"]:::apiCall
         I["playwright test --config config/playwright.config.ts --debug"]:::apiCall
         J["await page.pause()"]:::apiCall

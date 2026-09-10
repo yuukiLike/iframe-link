@@ -16,18 +16,18 @@
  * 🔄 测试执行流程
  * ═══════════════════════════════════════════════════════════════════════════════
  *
- *   npm run test:e2e
+ *   pnpm run test:e2e
  *         │
  *         ▼
  *   ┌─────────────────┐
- *   │  npm run build  │  ← 第一步：用 tsup 打包 SDK 到 dist/
+ *   │  pnpm run build  │  ← 第一步：用 tsup 打包 SDK 到 dist/
  *   └────────┬────────┘
  *            ▼
  *   ┌─────────────────────────────────────────────────────────────┐
  *   │  Playwright 启动                                            │
  *   │                                                             │
  *   │  1. 根据 webServer 配置启动静态服务器 (serve)               │
- *   │     → npx serve . -l 3456 --cors                           │
+ *   │     → pnpm exec serve . -l 3456 --cors                           │
  *   │     → 这样就能通过 http://localhost:3456 访问项目文件       │
  *   │                                                             │
  *   │  2. 启动浏览器（默认 Chromium，无头模式）                   │
@@ -52,14 +52,14 @@
  * 🛠️ 常用命令
  * ═══════════════════════════════════════════════════════════════════════════════
  *
- *   npm run test:e2e          # 运行所有 E2E 测试（无头模式，看不到浏览器）
- *   npm run test:e2e:ui       # 打开可视化界面，可以看到测试执行过程（推荐新手使用！）
+ *   pnpm run test:e2e          # 运行所有 E2E 测试（无头模式，看不到浏览器）
+ *   pnpm run test:e2e:ui       # 打开可视化界面，可以看到测试执行过程（推荐新手使用！）
  *
  *   # 更多调试命令：
- *   npx playwright test --config config/playwright.config.ts --headed              # 显示浏览器窗口
- *   npx playwright test --config config/playwright.config.ts --debug               # 打开调试器，逐步执行
- *   npx playwright test --config config/playwright.config.ts --grep "handshake"    # 只运行名称包含 "handshake" 的测试
- *   npx playwright show-report docs/reports/playwright # 查看测试报告
+ *   pnpm exec playwright test --config config/playwright.config.ts --headed              # 显示浏览器窗口
+ *   pnpm exec playwright test --config config/playwright.config.ts --debug               # 打开调试器，逐步执行
+ *   pnpm exec playwright test --config config/playwright.config.ts --grep "handshake"    # 只运行名称包含 "handshake" 的测试
+ *   pnpm exec playwright show-report docs/reports/playwright # 查看测试报告
  *
  * ═══════════════════════════════════════════════════════════════════════════════
  * ❓ 为什么用 serve 而不是 Vite？
@@ -114,7 +114,7 @@ export default defineConfig({
   // ═══════════════════════════════════════════════════════════════════════════
 
   // 生成 HTML 格式的测试报告
-  // 测试完成后运行 `npx playwright show-report docs/reports/playwright` 查看
+  // 测试完成后运行 `pnpm exec playwright show-report docs/reports/playwright` 查看
   reporter: [['html', { outputFolder: '../docs/reports/playwright' }]],
 
   // 测试结果目录（存放失败时的截图、视频等）
@@ -161,7 +161,7 @@ export default defineConfig({
     // serve: 一个简单的静态文件服务器（npm 包）
     // -l 3456: 监听 3456 端口
     // --cors: 允许跨域请求（iframe 通信需要）
-    command: 'npx serve . -l 3456 --cors',
+    command: 'pnpm exec serve . -l 3456 --cors',
     cwd: '..',
 
     // Playwright 会等待这个 URL 可访问后才开始测试
